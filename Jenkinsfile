@@ -5,9 +5,9 @@ pipeline {
       choice(choices: ['5268AC', 'NVG599', 'BGW210-700'], description: '', name: 'deviceModel')
     }
     stages {
-        stage('Run ECOManageGUI on '${params.choices[0]}) {
+        stage('Run ECOManageGUI on ${params.choices[0]}') {
             steps{
-                echo 'Run ECOManageGUI testsuite on '${params.choices[0]}
+                echo 'Run ECOManageGUI testsuite on ${params.choices[0]}'
                 build 'Robot Framework - ECOManageGUI'
             }
         }
