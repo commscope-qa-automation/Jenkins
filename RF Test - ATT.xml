@@ -1,0 +1,448 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.3">
+          <name>separator-43cc847e-565d-4a20-bc37-6bd3ba53f21c</name>
+          <sectionHeader>Input Robot Framework output directory, test data directory, and test data file name.</sectionHeader>
+        </jenkins.plugins.parameter__separator.ParameterSeparatorDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>OutputDir</name>
+          <description>Relative directory to the workspace. The directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.</description>
+          <defaultValue>Jenkins_Robot_Results</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TestDataDir</name>
+          <description>Relative directory to the workspace. The directory contains test data files.</description>
+          <defaultValue>TestData_Custom</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TestDataFileName</name>
+          <description>Test data file name.</description>
+          <defaultValue>All_TestData</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.3">
+          <name>separator-4f7d16fd-6f28-4466-bd84-fb916b33633d</name>
+          <sectionHeader>TestSuites/TestCases: Select test suites and test cases
+Please use TestCaseRunFilter1 or TestCaseRunFilter2 to select test cases to run.</sectionHeader>
+        </jenkins.plugins.parameter__separator.ParameterSeparatorDefinition>
+        <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.5.5">
+          <name>TestSuiteName</name>
+          <description></description>
+          <randomName>choice-parameter-108751378904200</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.76">
+              <script>import hudson.model.*
+import jenkins.model.Jenkins
+import static javax.xml.xpath.XPathConstants.*
+import groovy.xml.DOMBuilder
+import groovy.xml.dom.DOMCategory
+
+def jenkinsInstance = Jenkins.getInstance()
+def jobName = this.binding.jenkinsProject.name
+def customer = jobName.split(&quot;-&quot;)[1].trim()
+def item = jenkinsInstance.getItemByFullName(jobName)
+
+def config = item.getConfigFile()
+def file = config.getFile()
+def fileContents = file.getText(&apos;UTF-8&apos;)
+def doc = DOMBuilder.parse(new StringReader(fileContents), false, false).documentElement
+def workspace = &quot;&quot;
+
+use(DOMCategory) {
+	workspace = doc.xpath( &quot;/project/customWorkspace&quot;, NODESET).text()
+}
+if (workspace == &quot;&quot;) {
+	workspace = jenkinsInstance.getWorkspaceFor(item)
+}
+
+evaluate(new File(workspace  + &quot;/ECOManageRobotProject/Scripts/&quot; + customer + &quot;_GetTestSuites.groovy&quot;))</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.76">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>RF Test - ATT</projectName>
+          <projectFullName>RF Test - ATT</projectFullName>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.ChoiceParameter>
+        <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.3">
+          <name>separator-851b5b34-edb6-4d89-971d-57577e6dbbbb</name>
+          <separatorStyle>border-color: blue;
+border-style: solid; 
+border-width: 1px;</separatorStyle>
+        </jenkins.plugins.parameter__separator.ParameterSeparatorDefinition>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.5.5">
+          <name>TestCaseRunFilter1</name>
+          <description>Select which test cases to run if TestCaseRunFilter1 is not used.</description>
+          <randomName>choice-parameter-109012678143500</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.76">
+              <script>import hudson.model.*
+import jenkins.model.Jenkins
+import static javax.xml.xpath.XPathConstants.*
+import groovy.xml.DOMBuilder
+import groovy.xml.dom.DOMCategory
+
+def jenkinsInstance = Jenkins.getInstance()
+def jobName = this.binding.jenkinsProject.name
+def customer = jobName.split(&quot;-&quot;)[1].trim()
+def item = jenkinsInstance.getItemByFullName(jobName)
+
+def config = item.getConfigFile()
+def file = config.getFile()
+def fileContents = file.getText(&apos;UTF-8&apos;)
+def doc = DOMBuilder.parse(new StringReader(fileContents), false, false).documentElement
+def workspace = &quot;&quot;
+
+use(DOMCategory) {
+	workspace = doc.xpath( &quot;/project/customWorkspace&quot;, NODESET).text()
+}
+if (workspace == &quot;&quot;) {
+	workspace = jenkinsInstance.getWorkspaceFor(item)
+}
+
+evaluate(new File(workspace  + &quot;/ECOManageRobotProject/Scripts/&quot; + customer + &quot;_GetTestCases.groovy&quot;))</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.76">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>RF Test - ATT</projectName>
+          <projectFullName>RF Test - ATT</projectFullName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>TestSuiteName</referencedParameters>
+          <choiceType>PT_MULTI_SELECT</choiceType>
+          <filterable>true</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+        <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.3">
+          <name>separator-daf918b6-e68e-4655-842a-548cce97f86e</name>
+          <separatorStyle>border-color: blue;
+border-style: solid; 
+border-width: 1px;</separatorStyle>
+        </jenkins.plugins.parameter__separator.ParameterSeparatorDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TestCaseRunFilter2</name>
+          <description>This is to filter which test cases will be run. The entire test suite will be run if the value is empty.
+-t, --test &lt;name&gt;
+ 	`Selects the test cases by name`_.
+-i, --include &lt;tag&gt;
+ 	`Includes the test cases`_ by tag.
+-e, --exclude &lt;tag&gt;
+ 	`Excludes the test cases`_ by tag.</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.3">
+          <name>separator-c90d049e-f1be-4a5c-b20d-b6dae3dea5cc</name>
+          <sectionHeader>Etrack Release / Cycle: Auto update Etrack test case status
+Choose &quot;Retrieve Etrack Version and select Etrack Version / Cycle / Folder from download list.
+
+</sectionHeader>
+        </jenkins.plugins.parameter__separator.ParameterSeparatorDefinition>
+        <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.5.5">
+          <name>RetrieveProjectVersion</name>
+          <description></description>
+          <randomName>choice-parameter-149744244024400</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.76">
+              <script>return [
+&quot;Retrieve Project Version&quot;
+]</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.76">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>RF Test - ATT</projectName>
+          <projectFullName>RF Test - ATT</projectFullName>
+          <choiceType>PT_CHECKBOX</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.ChoiceParameter>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.5.5">
+          <name>ProjectVersion</name>
+          <description></description>
+          <randomName>choice-parameter-150628807866600</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.76">
+              <script>import hudson.model.*
+import jenkins.model.Jenkins
+import static javax.xml.xpath.XPathConstants.*
+import groovy.xml.DOMBuilder
+import groovy.xml.dom.DOMCategory
+
+def jenkinsInstance = Jenkins.getInstance()
+def jobName = this.binding.jenkinsProject.name
+def item = jenkinsInstance.getItemByFullName(jobName)
+
+def config = item.getConfigFile()
+def configFile = config.getFile()
+def fileContents = configFile .getText(&apos;UTF-8&apos;)
+def doc = DOMBuilder.parse(new StringReader(fileContents), false, false).documentElement
+def workspace = &quot;&quot;
+
+use(DOMCategory) {
+	workspace = doc.xpath( &quot;/project/customWorkspace&quot;, NODESET).text()
+}
+if (workspace == &quot;&quot;) {
+	workspace = jenkinsInstance.getWorkspaceFor(item)
+}
+
+evaluate(new File(workspace + &quot;/ECOManageRobotProject/Scripts/GetProjectVersion.groovy&quot;))</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.76">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>RF Test - ATT</projectName>
+          <projectFullName>RF Test - ATT</projectFullName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>RetrieveProjectVersion</referencedParameters>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.5.5">
+          <name>ProjectCycle</name>
+          <description></description>
+          <randomName>choice-parameter-225134164945000</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.76">
+              <script>import hudson.model.*
+import jenkins.model.Jenkins
+import static javax.xml.xpath.XPathConstants.*
+import groovy.xml.DOMBuilder
+import groovy.xml.dom.DOMCategory
+
+def jenkinsInstance = Jenkins.getInstance()
+def jobName = this.binding.jenkinsProject.name
+def item = jenkinsInstance.getItemByFullName(jobName)
+
+def config = item.getConfigFile()
+def configFile = config.getFile()
+def fileContents = configFile .getText(&apos;UTF-8&apos;)
+def doc = DOMBuilder.parse(new StringReader(fileContents), false, false).documentElement
+def workspace = &quot;&quot;
+
+use(DOMCategory) {
+	workspace = doc.xpath( &quot;/project/customWorkspace&quot;, NODESET).text()
+}
+if (workspace == &quot;&quot;) {
+	workspace = jenkinsInstance.getWorkspaceFor(item)
+}
+
+evaluate(new File(workspace + &quot;/ECOManageRobotProject/Scripts/GetProjectCycle.groovy&quot;))</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.76">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>RF Test - ATT</projectName>
+          <projectFullName>RF Test - ATT</projectFullName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>ProjectVersion</referencedParameters>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.5.5">
+          <name>ProjectFolder</name>
+          <description></description>
+          <randomName>choice-parameter-297961338033700</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.76">
+              <script>import hudson.model.*
+import jenkins.model.Jenkins
+import static javax.xml.xpath.XPathConstants.*
+import groovy.xml.DOMBuilder
+import groovy.xml.dom.DOMCategory
+
+def jenkinsInstance = Jenkins.getInstance()
+def jobName = this.binding.jenkinsProject.name
+def item = jenkinsInstance.getItemByFullName(jobName)
+
+def config = item.getConfigFile()
+def configFile = config.getFile()
+def fileContents = configFile .getText(&apos;UTF-8&apos;)
+def doc = DOMBuilder.parse(new StringReader(fileContents), false, false).documentElement
+def workspace = &quot;&quot;
+
+use(DOMCategory) {
+	workspace = doc.xpath( &quot;/project/customWorkspace&quot;, NODESET).text()
+}
+if (workspace == &quot;&quot;) {
+	workspace = jenkinsInstance.getWorkspaceFor(item)
+}
+
+evaluate(new File(workspace + &quot;/ECOManageRobotProject/Scripts/GetProjectFolder.groovy&quot;))</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.76">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>RF Test - ATT</projectName>
+          <projectFullName>RF Test - ATT</projectFullName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>ProjectCycle</referencedParameters>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.6.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://github.com/commscope-qa-automation/RobotProject.git</url>
+        <credentialsId>github_creds_commscope-qa</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="empty-list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <customWorkspace>C:\Users\gzheng\Automation\RobotFramework</customWorkspace>
+  <builders>
+    <hudson.tasks.BatchFile>
+      <command>IF &quot;%TestSuiteName%.&quot; == &quot;.&quot; GOTO LabelComplete&#xd;
+&#xd;
+echo Go to the Robot Framework directory&#xd;
+cd %WORKSPACE%&#xd;
+del /q %OutputDir%\%TestSuiteName%_*.xml&#xd;
+del /q %OutputDir%\%TestSuiteName%_*.html&#xd;
+del /q %OutputDir%\Screenshots\*%TestSuiteName%*.png&#xd;
+FOR /d /r . %%d IN (&quot;%OutputDir%\Output\*%TestSuiteName%*&quot;) DO @IF EXIST &quot;%%d&quot; rd /s /q &quot;%%d&quot;&#xd;
+&#xd;
+if &quot;%TestCaseRunFilter1%&quot; == &quot;&quot; (set &quot;TestCaseRunFilter=%TestCaseRunFilter2%&quot;) else (set &quot;TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %&quot;)&#xd;
+&#xd;
+echo Start Robot Framework automation&#xd;
+robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py ECOManageRobotProject/TestSuite_ECOManage/TestSuite_%TestSuiteName%.robot&#xd;
+&#xd;
+:LabelComplete&#xd;
+echo Completed!</command>
+      <configuredLocalRules/>
+    </hudson.tasks.BatchFile>
+  </builders>
+  <publishers>
+    <hudson.plugins.robot.RobotPublisher plugin="robot@2.2.0">
+      <archiveDirName>robot-plugin</archiveDirName>
+      <outputPath>${OutputDir}</outputPath>
+      <reportFileName>${TestSuiteName}_report.html</reportFileName>
+      <logFileName>${TestSuiteName}_log.html</logFileName>
+      <outputFileName>${TestSuiteName}_output.xml</outputFileName>
+      <disableArchiveOutput>false</disableArchiveOutput>
+      <passThreshold>100.0</passThreshold>
+      <unstableThreshold>100.0</unstableThreshold>
+      <otherFiles>
+        <string>Screenshots/*${TestSuiteName}*.png</string>
+        <string>Output/*${TestSuiteName}*/*</string>
+      </otherFiles>
+      <overwriteXAxisLabel></overwriteXAxisLabel>
+      <enableCache>true</enableCache>
+      <onlyCritical>true</onlyCritical>
+    </hudson.plugins.robot.RobotPublisher>
+    <hudson.plugins.emailext.ExtendedEmailPublisher plugin="email-ext@2.81">
+      <recipientList>$DEFAULT_RECIPIENTS</recipientList>
+      <configuredTriggers>
+        <hudson.plugins.emailext.plugins.trigger.AlwaysTrigger>
+          <email>
+            <subject>$PROJECT_DEFAULT_SUBJECT</subject>
+            <body>$PROJECT_DEFAULT_CONTENT</body>
+            <recipientProviders>
+              <hudson.plugins.emailext.plugins.recipients.ListRecipientProvider/>
+            </recipientProviders>
+            <attachmentsPattern></attachmentsPattern>
+            <attachBuildLog>false</attachBuildLog>
+            <compressBuildLog>false</compressBuildLog>
+            <replyTo>$PROJECT_DEFAULT_REPLYTO</replyTo>
+            <contentType>project</contentType>
+          </email>
+        </hudson.plugins.emailext.plugins.trigger.AlwaysTrigger>
+      </configuredTriggers>
+      <contentType>both</contentType>
+      <defaultSubject>$PROJECT_NAME - ${TestSuiteName} - ${ROBOT_PASSRATIO} -- PASS ${ROBOT_PASSPERCENTAGE}% </defaultSubject>
+      <defaultContent>&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Robot Framework Automation Result&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;ECO Robot Framework Automation Result&lt;/h1&gt;
+       &lt;p&gt;
+              $PROJECT_NAME - ${TestSuiteName} - Build # $BUILD_NUMBER - $BUILD_STATUS
+       &lt;/p&gt;
+       &lt;p&gt;
+              Check console output at $BUILD_URL to view the results.
+      &lt;/p&gt;
+       &lt;p&gt;
+           &lt;a href=${ROBOT_REPORTLINK}&gt;Robot Framework Report&lt;/a&gt;
+       &lt;/p&gt;
+       &lt;p&gt;Failed Test Cases:&lt;/p&gt;
+       &lt;p&gt;${ROBOT_FAILEDCASES}&lt;/p&gt;
+    &lt;/h1&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</defaultContent>
+      <attachmentsPattern></attachmentsPattern>
+      <presendScript>$DEFAULT_PRESEND_SCRIPT</presendScript>
+      <postsendScript>$DEFAULT_POSTSEND_SCRIPT</postsendScript>
+      <attachBuildLog>false</attachBuildLog>
+      <compressBuildLog>false</compressBuildLog>
+      <replyTo>$DEFAULT_REPLYTO</replyTo>
+      <from>Robot.Framework@commscope.com</from>
+      <saveOutput>false</saveOutput>
+      <disabled>false</disabled>
+    </hudson.plugins.emailext.ExtendedEmailPublisher>
+    <org.jvnet.hudson.plugins.groovypostbuild.GroovyPostbuildRecorder plugin="groovy-postbuild@2.5">
+      <script plugin="script-security@1.76">
+        <script>evaluate(new File(manager.build.workspace.toString() + &quot;/ECOManageRobotProject/Scripts/UpdateTCStatus.groovy&quot;))</script>
+        <sandbox>false</sandbox>
+      </script>
+      <behavior>0</behavior>
+      <runForMatrixParent>false</runForMatrixParent>
+    </org.jvnet.hudson.plugins.groovypostbuild.GroovyPostbuildRecorder>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.11.8"/>
+  </buildWrappers>
+</project>
