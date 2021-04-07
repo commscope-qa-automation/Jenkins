@@ -1,0 +1,225 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.40">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.8.4"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.8.4">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.89">
+    <script>pipeline {
+    agent any
+    stages {
+        stage(&apos;PolicyProvision_2xxx&apos;) {
+            steps {
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;PolicyProvision&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-i firewall_policy_5268&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;Policies_Firewall_2xxx&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+        stage(&apos;PolicyProvision_3xxx&apos;) {
+            steps {
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;PolicyProvision&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-i captiveportal_policy_all&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;Policies_CaptivePortal_3xxx&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+        /*stage(&apos;PolicyProvision_4xxx&apos;) {
+            steps {
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;PolicyProvision&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-i queue_policy_5268&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;Policies_Queue_4xxx&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }		
+        stage(&apos;PolicyProvision_5xxx&apos;) {
+            steps {
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;PolicyProvision&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-i classification_policy_all -i classification_policy_5268&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;Policies_Classification_5xxx&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }		
+        stage(&apos;PolicyProvision_6xxx&apos;) {
+            steps {
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;PolicyProvision&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-i timezone_policy_all&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;Policies_Timezone_6xxx&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+        stage(&apos;CR1698IPDR&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;CR1698IPDR&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-4396 -t ECOIOT-4399 -t ECOIOT-4404&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;CR1698_IPDR&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+        stage(&apos;ECOManageBDC&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;ECOManageBDC&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;Bulk Data Collection&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }	
+        stage(&apos;CR1575Crashlog&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;CR1575Crashlog&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-3356 -t ECOIOT-3357 -t ECOIOT-3361 -t ECOIOT-3362 -t ECOIOT-3369 -t ECOIOT-3370&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;CR1575_Crashlog&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }		
+        stage(&apos;ECOCollect&apos;) {
+            steps {
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;ECOCollect&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-3082 -t ECOIOT-3086 -t ECOIOT-3112 -t ECOIOT-3113 -t ECOIOT-3114 -t ECOIOT-3115 -t ECOIOT-5625 -t ECOIOT-5626 -t ECOIOT-5627&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;ECO Collect&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+        stage(&apos;CR1698HTTPBDC&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;CR1698HTTPBDC&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-4568 -t ECOIOT-4723&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;CR1698_HTTP_BDC&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }		
+        stage(&apos;CR1867Notification&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;CR1867Notification&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;CR1867_ECO_Notification_API&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }		
+        stage(&apos;ECOManageGUI&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;ECOManageGUI&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-390, -t ECOIOT-458, -t ECOIOT-460, -t ECOIOT-461, -t ECOIOT-462, -t ECOIOT-1531, -t ECOIOT-1914, -t ECOIOT-1918, -t ECOIOT-1919, -t ECOIOT-1924, -t ECOIOT-1928, -t ECOIOT-1929, -t ECOIOT-3152, -t ECOIOT-3153, -t ECOIOT-3169, -t ECOIOT-3170, -t ECOIOT-3313, -t ECOIOT-3314, -t ECOIOT-3315, -t ECOIOT-3316, -t ECOIOT-3317, -t ECOIOT-3318, -t ECOIOT-3319, -t ECOIOT-3320, -t ECOIOT-3321, -t ECOIOT-3322, -t ECOIOT-3323&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;GUI Operations&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }				
+		stage(&apos;FirmwareUpgrade&apos;) {
+            steps {
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;FirmwareUpgrade&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-2398 -t ECOIOT-2400 -t ECOIOT-2402&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;Upgrade Methods&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+		stage(&apos;RGFMECO69NBIUpgrade&apos;) {
+            steps {
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;RGFMECO69NBIUpgrade&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;Upgrade Methods&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;RGFMECO-69 - Auto Upgrade on Bootstrap (Replacement)&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+		stage(&apos;Baseline&apos;) {
+            steps {
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;FirmwareUpgrade&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-3311 -t ECOIOT-5395&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;Baseline&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }		
+        stage(&apos;5268AC_RGFM5268-668-Reboot Counter&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;5268AC&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-6074, -t ECOIOT-6075, -t ECOIOT-6088, -t ECOIOT-6092, -t ECOIOT-6093&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;ATT_RGFM5268-668-Reboot Counter&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+        stage(&apos;5268AC_RGFIRM-1359-Active Notification&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;5268AC&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-6148, -t ECOIOT-6157, -t ECOIOT-6158, -t ECOIOT-6159, -t ECOIOT-6160, -t ECOIOT-6161, ECOIOT-6162, -t ECOIOT-6163, -t ECOIOT-6164, -t ECOIOT-6165, -t ECOIOT-6166, -t ECOIOT-6167, -t ECOIOT-6168&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;ATT_RGFIRM-1359-Active Notification&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+        stage(&apos;5268AC_RGFM5268-788-Default Settings&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;5268AC&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-6094, -t ECOIOT-6095&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;ATT_RGFM5268-788-Default Settings&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+        stage(&apos;5268AC_RGFM5268-500_LAN_IPv6&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;5268AC&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-6150&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;ATT_RGFM5268-500_LAN_IPv6&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }
+        stage(&apos;5268AC_RGFM5268-751_PersistentTR232Conn&apos;) {
+            steps{
+                build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;CR1698HTTPBDC&apos;), \
+                    string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-6149&apos;), \
+                    string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268&apos;), \
+                    string(name: &apos;ProjectCycle&apos;, value: &apos;ATT_RGFM5268-751_PersistentTR232Conn&apos;), \
+                    string(name: &apos;ProjectFolder&apos;, value: &apos;&apos;), \
+                    string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_att76_52141N005018&apos;)]
+            }
+        }*/		
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

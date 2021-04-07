@@ -1,0 +1,73 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.40">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.8.4"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.8.4">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.89">
+    <script>pipeline {
+    agent any
+    stages {
+        stage(&apos;qa1_ECOManageGUI&apos;) {
+            steps{
+                catchError(buildResult: &apos;SUCCESS&apos;, stageResult: &apos;FAILURE&apos;) {
+                    build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;ECOManageGUI&apos;), \
+                        string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-455 -t ECOIOT-453 -t ECOIOT-3310 -t ECOIOT-414 -t ECOIOT-413&apos;), \
+                        string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268_11.12_SR4&apos;), \
+                        string(name: &apos;ProjectCycle&apos;, value: &apos;ECO Manage 4.5 Smoke Tests - QA1&apos;), \
+                        string(name: &apos;ProjectFolder&apos;, value: &apos;ECO_GUI_ECO 4.5&apos;), \
+    					string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_qa1_11151N014876&apos;)]
+                }
+            }
+        }
+        stage(&apos;qa1_ECOManageBDC&apos;) {
+            steps {
+                catchError(buildResult: &apos;SUCCESS&apos;, stageResult: &apos;FAILURE&apos;) {
+                    build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;ECOManageBDC&apos;), \
+                        string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-3294&apos;), \
+                        string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268_11.12_SR4&apos;), \
+                        string(name: &apos;ProjectCycle&apos;, value: &apos;ECO Manage 4.5 Smoke Tests - QA1&apos;), \
+                        string(name: &apos;ProjectFolder&apos;, value: &apos;BDC_ECO 4.5&apos;), \
+    					string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_qa1_11151N014876&apos;)]
+                }
+            }
+        }   
+        stage(&apos;qa1_PairwiseAPI&apos;) {
+            steps {
+                catchError(buildResult: &apos;SUCCESS&apos;, stageResult: &apos;FAILURE&apos;) {
+                    build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;PairwiseAPI&apos;), \
+                        string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-3317 -t ECOIOT-390 -t ECOIOT-3313&apos;), \
+                        string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268_11.12_SR4&apos;), \
+                        string(name: &apos;ProjectCycle&apos;, value: &apos;ECO Manage 4.5 Smoke Tests - QA1&apos;), \
+                        string(name: &apos;ProjectFolder&apos;, value: &apos;API_ECO 4.5&apos;), \
+    					string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_qa1_11151N014876&apos;)]
+                }
+            }
+        }
+        stage(&apos;qa1_ECOCollect&apos;) {
+            steps {
+                catchError(buildResult: &apos;SUCCESS&apos;, stageResult: &apos;FAILURE&apos;) {
+                    build job: &apos;RF Test - ATT&apos;, parameters: [string(name: &apos;TestSuiteName&apos;, value: &apos;ECOCollect&apos;), \
+                        string(name: &apos;TestCaseRunFilter2&apos;, value: &apos;-t ECOIOT-3112 -t ECOIOT-3113 -t ECOIOT-3115&apos;), \
+                        string(name: &apos;ProjectVersion&apos;, value: &apos;ATT_FW_Upgrade_5268_11.12_SR4&apos;), \
+                        string(name: &apos;ProjectCycle&apos;, value: &apos;ECO Manage 4.5 Smoke Tests - QA1&apos;), \
+                        string(name: &apos;ProjectFolder&apos;, value: &apos;ECO_Collect_ECO 4.5&apos;), \
+    					string(name: &apos;TestDataFileName&apos;, value: &apos;All_TestData_qa1_11151N014876&apos;)]
+                }
+            }
+        }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
