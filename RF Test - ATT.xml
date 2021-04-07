@@ -358,7 +358,7 @@ FOR /d /r . %%d IN (&quot;%OutputDir%\Output\*%TestSuiteName%*&quot;) DO @IF EXI
 if &quot;%TestCaseRunFilter1%&quot; == &quot;&quot; (set &quot;TestCaseRunFilter=%TestCaseRunFilter2%&quot;) else (set &quot;TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %&quot;)&#xd;
 &#xd;
 echo Start Robot Framework automation&#xd;
-robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit ECOManageGUI_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py ECOManageRobotProject/TestSuite_ECOManage/TestSuite_%TestSuiteName%.robot&#xd;
+robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py ECOManageRobotProject/TestSuite_ECOManage/TestSuite_%TestSuiteName%.robot&#xd;
 &#xd;
 :LabelNoSuites&#xd;
 echo No TestSuite was selected!&#xd;
