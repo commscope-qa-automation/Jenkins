@@ -69,10 +69,6 @@ pipeline {
             label 'robot_windows'
         }
     }
-    
-    environment {
-        SLACKTOKEN = 'qwsaw2345'
-    }
   
     stages {
         stage('Parameters'){
