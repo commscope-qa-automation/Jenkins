@@ -912,11 +912,13 @@ pipeline {
                 }
             }
         }
+        
         stage ("Check out scripts") {
             steps {
                 git credentialsId: 'github_creds', url: 'https://github.com/commscope-qa-automation/RobotProject.git'
             }
         }
+        
         stage ("Run scripts") {
             steps {
                 bat '''IF "%TestSuiteName%." == "." GOTO LabelComplete
