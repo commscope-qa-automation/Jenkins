@@ -72,7 +72,7 @@ pipeline {
   
     stages {
         stage('Parameters'){
-            steps {
+            steps {            
                 script {
                     def choiceTestSuite
                     def choiceTestCase
@@ -921,6 +921,13 @@ pipeline {
         
         stage ("Run scripts") {
             steps {
+            	script {
+	                def buildNumber = currentBuild.number
+	                def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
+	                currentBuild.displayName = "#" + buildNumber + " " + loginUser + " - " + params.TestSuiteName
+	                //currentBuild.description = "This build is executed by " + loginUser
+            	}            	
+            	
                 bat '''IF "%TestSuiteName%." == "." GOTO LabelComplete
                 ECHO Go to the Robot Framework directory
                 CD %WORKSPACE%
@@ -952,7 +959,7 @@ pipeline {
                       disableArchiveOutput      : false,
                       passThreshold             : 100,
                       unstableThreshold         : 95.0,
-                      otherFiles                : "${TestSuiteName}_junit.xml,Screenshots/*${TestSuiteName}*.png,Output/*${TestSuiteName}*/*"
+                      otherFiles                : "Screenshots/*${TestSuiteName}*.png,Output/*${TestSuiteName}*/*"
                     ]
                   )
                 }
@@ -991,8 +998,8 @@ pipeline {
                     
                     // Get Etrack username and password from global credentials
                     println("Get Etrack credentials.")
-                    def jenkinsUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
-                    //println("jenkinsUser:" + jenkinsUser)
+                    def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
+                    //println("loginUser:" + loginUser)
                     
                     def username = ""
                     def password = ""
@@ -1003,7 +1010,7 @@ pipeline {
                     	null
                     )
                     for (c in creds) {
-                    	if (c.id == "etrack_creds_" + jenkinsUser) {
+                    	if (c.id == "etrack_creds_" + loginUser) {
                     		username = c.username
                     		password = c.password
                     	}
