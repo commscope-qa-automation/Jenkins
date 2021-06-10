@@ -67,10 +67,12 @@ def getLoginUser() {
     return loginUser
 }
 
-def loginUser = getLoginUser()
-def AGENT_LABLE = "robot_windows_" + loginUser
+def LOGIN_USER = getLoginUser()
+def AGENT_LABLE = "robot_windows_" + LOGIN_USER
                     
 pipeline {
+    options {skipDefaultCheckout(true)}
+
     //agent any
     agent { 
         label {
@@ -749,13 +751,13 @@ pipeline {
                             string(
                                 defaultValue: 'Jenkins_Robot_Results', 
                                 name: 'OutputDir',
-                                description: 'Relative directory to the workspace. This auto created directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
+                                description: 'Relative directory to the workspace. The directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
                                 trim: true
                             ),
                             string(
                                 defaultValue: 'TestData_Custom', 
                                 name: 'TestDataDir',
-                                description: 'Relative directory to the workspace. The directory contains test data files. Please make sure you have this directory under your workspace.',
+                                description: 'Relative directory to the workspace. The directory contains test data files.',
                                 trim: true
                             ),
                             string(
@@ -939,13 +941,13 @@ pipeline {
         stage ("Run scripts") {
             steps {
             	script {
-	                currentBuild.displayName = "#" + currentBuild.number + " " + loginUser + " - " + params.TestSuiteName
+	                currentBuild.displayName = "#" + currentBuild.number + " " + LOGIN_USER + " - " + params.TestSuiteName
             	            	
                     if (TestSuiteName != "") {
-                        bat '''DEL /q %OutputDir%\\%TestSuiteName%_*.xml
-                        DEL /q %OutputDir%\\%TestSuiteName%_*.html
-                        DEL /q %OutputDir%\\Screenshots\\*%TestSuiteName%*.png
-                        FOR /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") DO @IF EXIST "%%d" rd /s /q "%%d"
+                        bat '''IF EXIST %OutputDir% DEL /q %OutputDir%\\%TestSuiteName%_*.xml
+                        IF EXIST %OutputDir% DEL /q %OutputDir%\\%TestSuiteName%_*.html
+                        IF EXIST %OutputDir%\\Screenshots DEL /q %OutputDir%\\Screenshots\\*%TestSuiteName%*.png
+                        IF EXIST %OutputDir%\\Output FOR /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") DO @IF EXIST "%%d" rd /s /q "%%d"
                         
                         IF "%TestCaseRunFilter1%" == "" (SET "TestCaseRunFilter=%TestCaseRunFilter2%") ELSE (SET "TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %")
                         
@@ -1015,7 +1017,7 @@ pipeline {
                     
                     // Get Etrack username and password from global credentials
                     println("Get Etrack credentials.")
-                    //println("loginUser:" + loginUser)
+                    //println("LOGIN_USER:" + LOGIN_USER)
                     
                     def username = ""
                     def password = ""
@@ -1026,7 +1028,7 @@ pipeline {
                     	null
                     )
                     for (c in creds) {
-                    	if (c.id == "etrack_creds_" + loginUser) {
+                    	if (c.id == "etrack_creds_" + LOGIN_USER) {
                     		username = c.username
                     		password = c.password
                     	}
