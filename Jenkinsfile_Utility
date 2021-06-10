@@ -6,7 +6,8 @@ def getLoginUser() {
 def LOGIN_USER = getLoginUser()
 def AGENT_LABLE = "robot_windows_" + LOGIN_USER
                     
-pipeline {
+pipeline {    
+    options {skipDefaultCheckout(true)}
     //agent any
     agent { 
         label {
