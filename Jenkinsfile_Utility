@@ -48,12 +48,6 @@ pipeline {
                     properties([
                         parameters([
                             string(
-                                defaultValue: 'Jenkins_Robot_Results', 
-                                name: 'OutputDir',
-                                description: 'Relative directory to the workspace. The auto created directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
-                                trim: true
-                            ),
-                            string(
                                 defaultValue: 'TestData_Custom', 
                                 name: 'TestDataDir',
                                 description: 'Relative directory to the workspace. The directory contains test data files. Please make sure you have this directory under your workspace.',
@@ -128,7 +122,7 @@ pipeline {
                     if (params.Utility == "") {
                         println("No utility is selected.")
                     } else {
-                        bat 'robot -t "%Utility%" --outputdir %OutputDir% --log Utility_log_1.html --output Utility_output_1.xml --report Utility_report_1.html --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECOManage/Utility.robot'
+                        bat 'robot -t "%Utility%" --log Utility_log_1.html --output Utility_output_1.xml --report Utility_report_1.html --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECOManage/Utility.robot'
                     }
                 }
             }
