@@ -1,53 +1,134 @@
-properties([
-    parameters([
-        string(
-            defaultValue: 'Jenkins_Robot_Results', 
-            name: 'OutputDir',
-            description: 'Relative directory to the workspace. The directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
-            trim: true
-        ),
-        string(
-            defaultValue: 'TestData_Custom', 
-            name: 'TestDataDir',
-            description: 'Relative directory to the workspace. The directory contains test data files.',
-            trim: true
-        ),
-        string(
-            defaultValue: 'All_TestData', 
-            name: 'TestDataFileName',
-            description: 'Test data file name.',
-            trim: true
-        ),    
-        choice(
-            name: 'Utility',
-            choices: ['Configure Device After Factory Reset',
-            'Configure Device LAN IP Via ECO API',
-            'Capture Packets On RG Gateway',
-            'Capture Packets On AWS Servers'
-            ],
-            description: 'Please choose the utility:'
-        )
-    ])
-])  
+def getLoginUser() {
+    def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
+    return loginUser
+}
 
+def LOGIN_USER = getLoginUser()
+def AGENT_LABLE = "robot_windows_" + LOGIN_USER
+                    
 pipeline {
+    //agent any
     agent { 
         label {
-            label 'robot_windows'
+            label "${AGENT_LABLE}"
         }
     }
     
     stages {
+        stage('Parameters'){
+            steps {
+                script { 
+                    def choiceUtility = '''
+	                    return [
+	                    "",
+	                    "Configure Device After Factory Reset",
+	                    "Configure Device LAN IP Via ECO API",
+	                    "Capture Packets On RG Gateway",
+	                    "Capture Packets On AWS Servers"
+	                    ]
+                    '''
+                    
+                    def information = '''
+	                    if (Utility == "Configure Device After Factory Reset") {
+	                        return "<b>Currently only support 5268AC, BGW, NVG devices in Santa Clara and Austin lab.</b>"
+	                    } else if (Utility == "Configure Device LAN IP Via ECO API") {
+	                        return "<b>Currently only support 5268AC, BGW, NVG devices.</b>"
+	                    } else if (Utility == 'Capture Packets On RG Gateway') {
+	                        return "<b>Capture packets on 10.77.126.2 (Santa Clara RG Gateway) or 74.118.172.228 (Autin RG Gateway) depending on where the device is located.</b>"
+	                    } else if (Utility == 'Capture Packets On AWS Servers') {
+	                        return "<b>Capture packets on any specified AWS servers.</b>"
+	                    } else {
+	                        return "No utility is selected."
+	                    }
+                    '''
+                    
+                    
+                    properties([
+                        parameters([
+                            string(
+                                defaultValue: 'Jenkins_Robot_Results', 
+                                name: 'OutputDir',
+                                description: 'Relative directory to the workspace. The auto created directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
+                                trim: true
+                            ),
+                            string(
+                                defaultValue: 'TestData_Custom', 
+                                name: 'TestDataDir',
+                                description: 'Relative directory to the workspace. The directory contains test data files. Please make sure you have this directory under your workspace.',
+                                trim: true
+                            ),
+                            string(
+                                defaultValue: 'All_TestData', 
+                                name: 'TestDataFileName',
+                                description: 'Test data file name.',
+                                trim: true
+                            ),  
+                            [
+                                $class: 'ChoiceParameter', 
+                                choiceType: 'PT_SINGLE_SELECT', 
+                                description: '', 
+                                filterLength: 1, 
+                                filterable: true, 
+                                name: 'Utility', 
+                                script: [
+                                    $class: 'GroovyScript', 
+                                    fallbackScript: [
+                                        classpath: [], 
+                                        sandbox: false, 
+                                        script: "return['no utility']"
+                                    ], 
+                                    script: [
+                                            classpath: [], 
+                                            sandbox: false, 
+                                            script: 
+                                                "${choiceUtility}"
+                                    ]
+                                ]
+                            ],
+                            [
+                                $class: 'DynamicReferenceParameter', 
+                                choiceType: 'ET_FORMATTED_HTML', 
+                                description: '', 
+                                name: 'Information', 
+                                referencedParameters: 'Utility', 
+                                script: 
+                                    [$class: 'GroovyScript', 
+                                    script: 'return["no information"]', 
+                                    script: [
+                                        script: "${information}"
+                                    ]
+                                ]
+                            ]        
+                        ])
+                    ])
+                }
+            }
+        }
+        
        stage ("Check out scripts") {
             steps {
-                git credentialsId: 'github_creds', url: 'https://github.com/commscope-qa-automation/RobotProject.git'
+                checkout([
+                	$class: 'GitSCM', 
+                	branches: [[name: '*/master']], 
+                	doGenerateSubmoduleConfigurations: false, 
+                	extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '../']], 
+                	submoduleCfg: [], 
+                	userRemoteConfigs: [[credentialsId: 'github_creds', url: 'https://github.com/commscope-qa-automation/RobotProject.git']]
+                	])
             }
         }
         
         stage ("Run scripts") {
             steps {
-                bat '''robot -t "%Utility%" --outputdir %OutputDir% --log Utility_log_1.html --output Utility_output_1.xml --report Utility_report_1.html --variablefile ../../%TestDataDir%/%TestDataFileName%.py ECOManageRobotProject/TestSuite_ECOManage/Utility.robot
-                echo Completed!'''
+                script {
+	                currentBuild.displayName = "#" + currentBuild.number + " " + LOGIN_USER
+	                
+                    if (params.Utility == "") {
+                        println("No utility is selected.")
+                    } else {
+                        bat 'robot -t "%Utility%" --outputdir %OutputDir% --log Utility_log_1.html --output Utility_output_1.xml --report Utility_report_1.html --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECOManage/Utility.robot'
+                    }
+                }
             }
         }
     }
