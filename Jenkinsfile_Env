@@ -1,0 +1,208 @@
+def getLoginUser() {
+    def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
+    return loginUser
+}
+
+def LOGIN_USER = getLoginUser()
+def AGENT_LABLE = "robot_windows_" + LOGIN_USER
+
+pipeline {
+    options {skipDefaultCheckout(true)}
+
+    agent { 
+        label {
+            label "${AGENT_LABLE}"
+        }
+    }
+  
+    stages {
+        stage('Parameters'){
+            steps {            
+                script {
+                    def choiceTestSuite
+                    def choiceTestCase
+                    
+                    if (env.JOB_NAME.contains('ATT')) {
+					
+                        choiceEnv = '''
+                            return [
+                        	"ATT76",
+                        	"ATT60",
+                        	"QA1"
+                        	]
+                        '''
+
+                        choiceApp = '''
+                            if (Operation == "Check Status") {
+                            	return [
+									"DMC - ECO Manage for Devices + Nginx - DMC:selected",
+									"SMS - ECO Manage for Services + Nginx - SMS",
+									"TM - Traffic Manager + Nginx - TM",
+									"TM REDIS - Traffic Manager Redis - TM REDIS",
+									"TR157BRIDGE - TR157bridge - TR157BRIDGE",
+									"COLLECT - ECO Collect + Nginx - COLLECT",
+									"COLLECT REDIS - ECO Collect Redis - COLLECT",
+									"COLLECT RMQ - ECO Collect RabbitMQ - COLLECT RMQ",
+									"COLLECT CASSANDRA - ECO Collect Cassandra - COLLECT CASSANDRA",
+									"ESP - ESP Writer - ESP",
+									"ESP RMQ - ESP Writer RabbitMQ - ESP RMQ",
+									"NOTIF - ECO Notification Service - NOTIF",
+									"NOTIF ENDPOINT - ECO Notification Notification Endpoint - NOTIF ENDPOINT",
+									"RGACT BROKER - RGActivation Broker - RGACT BROKER",
+									"RGACT DISPATCHER - RGActivation Dispatcher - RGACT DISPATCHER",
+									"RGACT ENDPOINT - RGActivation Endpoint - RGACT ENDPOINT",
+									"MDC - MDC Proxy - MDC",
+									"LAS - Log Archive Server - LAS",
+									"BDC - Bulk Data Collect writing (bdc fwll ngfw) - DMC"									
+                            	]
+                            } else if (Operation == "Restart Application") {
+                            	return [
+									"DMC - ECO Manage for Devices + Nginx - DMC:selected",
+									"SMS - ECO Manage for Services + Nginx - SMS",
+									"TM - Traffic Manager + Nginx - TM",
+									"TM REDIS - Traffic Manager Redis - TM REDIS",
+									"TR157BRIDGE - TR157bridge - TR157BRIDGE",
+									"COLLECT - ECO Collect + Nginx - COLLECT",
+									"COLLECT REDIS - ECO Collect Redis - COLLECT",
+									"COLLECT RMQ - ECO Collect RabbitMQ - COLLECT RMQ",
+									"COLLECT CASSANDRA - ECO Collect Cassandra - COLLECT CASSANDRA",
+									"ESP - ESP Writer - ESP",
+									"ESP RMQ - ESP Writer RabbitMQ - ESP RMQ",
+									"NOTIF - ECO Notification Service - NOTIF",
+									"NOTIF ENDPOINT - ECO Notification Notification Endpoint - NOTIF ENDPOINT",
+									"RGACT BROKER - RGActivation Broker - RGACT BROKER",
+									"RGACT DISPATCHER - RGActivation Dispatcher - RGACT DISPATCHER",
+									"RGACT ENDPOINT - RGActivation Endpoint - RGACT ENDPOINT",
+									"MDC - MDC Proxy - MDC",
+									"LAS - Log Archive Server - LAS"
+                            	]	
+                            } else {
+                            	return ["unknown app"]
+                            }
+                        '''                        
+                        
+                    } else if (env.JOB_NAME.contains('Frontier')) {
+                        choiceEnv = '''
+                            return [
+                        	""
+                        	]
+                        ''' 
+                        choiceApp = '''
+                            if (Environment == "test1") {
+                            	return [
+                            		""
+                            	]
+                            }
+                            else if (Enviornment == "test2") {
+                            	return [
+                            		""
+                            	]
+                            } else {
+                            	return ["Unknown env"]
+                            }  
+                        '''
+                    }                   
+                    
+                    properties([
+                        parameters([ 
+                            string(
+                                defaultValue: 'ecoqa.private', 
+                                name: 'SSHKey',
+                                description: 'SSH private key for accessing AWS environment.',
+                                trim: true
+                            ),						
+                            [
+                                $class: 'ChoiceParameter', 
+                                choiceType: 'PT_SINGLE_SELECT', 
+                                description: 'Select one testing environment', 
+                                filterLength: 1, 
+                                filterable: true, 
+                                name: 'Environment', 
+                                script: [
+                                    $class: 'GroovyScript', 
+                                    fallbackScript: [
+                                        classpath: [], 
+                                        sandbox: false, 
+                                        script: 
+                                            "return['no env']"
+                                    ], 
+                                    script: [
+                                        classpath: [], 
+                                        sandbox: false, 
+                                        script: "${choiceEnv}"
+                                    ]
+                                ]
+                            ],
+                            [
+                                $class: 'CascadeChoiceParameter', 
+                                choiceType: 'PT_RADIO', 
+                                description: '', 
+                                name: 'Operation', 								
+                                filterable: false, 
+                                referencedParameters: 'Environment', 								
+                                script: [
+                                    $class: 'GroovyScript', 
+                                    fallbackScript: [
+                                        classpath: [], 
+                                        sandbox: false, 
+                                        script: 
+                                            "return['no operation']"
+                                    ], 
+                                    script: [
+                                        classpath: [], 
+                                        sandbox: false, 
+                                        script: "return ['Check Status:selected', 'Restart Application']"
+                                    ]
+                                ]
+                            ],							
+                            [
+                                $class: 'CascadeChoiceParameter', 
+                                choiceType: 'PT_MULTI_SELECT', 
+                                description: 'Select one, multiple, or all applications. Format: Application Name - Description - Application Server',
+                                name: 'Application', 
+                                filterable: true,
+                                referencedParameters: 'Operation', 
+                                script: 
+                                    [$class: 'GroovyScript', 
+                                    fallbackScript: [
+                                            classpath: [], 
+                                            sandbox: false, 
+                                            script: "return['no app']"
+                                            ], 
+                                    script: [
+                                            classpath: [], 
+                                            sandbox: false, 
+                                            script: "${choiceApp}"
+                                        ] 
+                                ]
+                            ]                                                                                  
+                        ])
+                    ])
+                }
+            }
+        }
+        
+        stage ("Check out scripts") {
+            steps {
+                checkout([
+                	$class: 'GitSCM', 
+                	branches: [[name: '*/master']], 
+                	doGenerateSubmoduleConfigurations: false, 
+                	extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '../']], 
+                	submoduleCfg: [], 
+                	userRemoteConfigs: [[credentialsId: 'github_creds', url: 'https://github.com/commscope-qa-automation/RobotProject.git']]
+                	])
+            }
+        }
+        
+        stage ("Run scripts") {
+            steps {
+            	script {
+	                currentBuild.displayName = "#" + currentBuild.number + " " + LOGIN_USER + " - " + params.Environment
+            	            	
+                    bat "robot -t "Check Status Or Restart App" -v "ENV:%Environment%" -v "OPER:%Operation%" -v "APPS:%Application%" -v "AWS_PRIVATE_KEY:%SSHKey%" ../ECOManageRobotProject/TestSuite_ECOManage/ECOEnv.robot"                       
+                }
+            }
+        }
+    }
+}   

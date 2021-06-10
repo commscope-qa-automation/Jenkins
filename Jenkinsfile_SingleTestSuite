@@ -61,12 +61,20 @@ def sendPutRequest(url, body, username, password) {
 def parseJson(content) {
     new groovy.json.JsonSlurperClassic().parseText(content)
 }
+
+def getLoginUser() {
+    def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
+    return loginUser
+}
+
+def loginUser = getLoginUser()
+def AGENT_LABLE = "robot_windows_" + loginUser
                     
 pipeline {
     //agent any
     agent { 
         label {
-            label 'robot_windows'
+            label "${AGENT_LABLE}"
         }
     }
   
@@ -576,7 +584,7 @@ pipeline {
                             import groovy.json.JsonSlurper
                             
                             def user = User.current().getId()
-                            def filename = "/tmp/project_version.json"
+                            def filename = "/tmp/project_version_" + user + ".json"
 
                             if (RetrieveProjectVersion == "Retrieve Project Version") {
                                 // Get Etrack username and password from global credentials
@@ -637,7 +645,7 @@ pipeline {
                             import groovy.json.JsonSlurper
                             
                             def user = User.current().getId()
-                            def filename = "/tmp/project_version.json"
+                            def filename = "/tmp/project_version_" + user + ".json"
 
                             def jsonSlurper = new JsonSlurper()
                             def data = jsonSlurper.parse(new File(filename))
@@ -683,7 +691,7 @@ pipeline {
                             	]
                             def json_str = JsonOutput.toJson(data1)
                             def json_beauty = JsonOutput.prettyPrint(json_str)
-                            filename = "/tmp/project_cycle.json"
+                            filename = "/tmp/project_cycle_" + user + ".json"
                             File file = new File(filename)
                             file.write(json_beauty)
                             
@@ -697,7 +705,7 @@ pipeline {
                             import groovy.json.JsonSlurper
                             
                             def user = User.current().getId()
-                            def filename = "/tmp/project_cycle.json"
+                            def filename = "/tmp/project_cycle_" + user + ".json"
 
                             def jsonSlurper = new JsonSlurper()
                             def data = jsonSlurper.parse(new File(filename))
@@ -741,13 +749,13 @@ pipeline {
                             string(
                                 defaultValue: 'Jenkins_Robot_Results', 
                                 name: 'OutputDir',
-                                description: 'Relative directory to the workspace. The directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
+                                description: 'Relative directory to the workspace. This auto created directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
                                 trim: true
                             ),
                             string(
                                 defaultValue: 'TestData_Custom', 
                                 name: 'TestDataDir',
-                                description: 'Relative directory to the workspace. The directory contains test data files.',
+                                description: 'Relative directory to the workspace. The directory contains test data files. Please make sure you have this directory under your workspace.',
                                 trim: true
                             ),
                             string(
@@ -759,7 +767,7 @@ pipeline {
                             [
                                 $class: 'ParameterSeparatorDefinition',
                                 name: 'TESTSUITE_HEADER',
-                                sectionHeader: 'TestSuites/TestCases: Select test suites and test cases.\nPlease use TestCaseRunFilter1 or TestCaseRunFilter2 to select test cases to run.',
+                                sectionHeader: 'TestSuites/TestCases: Select test suite and test cases.\nPlease use TestCaseRunFilter1 or TestCaseRunFilter2 to select test cases to run.',
                                 separatorStyle: separatorStyle,
                                 sectionHeaderStyle: sectionHeaderStyle
                             ],
@@ -768,7 +776,7 @@ pipeline {
                                 choiceType: 'PT_SINGLE_SELECT', 
                                 description: '', 
                                 filterLength: 1, 
-                                filterable: false, 
+                                filterable: true, 
                                 name: 'TestSuiteName', 
                                 script: [
                                     $class: 'GroovyScript', 
@@ -790,6 +798,7 @@ pipeline {
                                 choiceType: 'PT_MULTI_SELECT', 
                                 description: '',
                                 name: 'TestCaseRunFilter1', 
+                                filterable: true,
                                 referencedParameters: 'TestSuiteName', 
                                 script: 
                                     [$class: 'GroovyScript', 
@@ -852,6 +861,7 @@ pipeline {
                                 choiceType: 'PT_SINGLE_SELECT', 
                                 description: '',
                                 name: 'ProjectVersion', 
+                                filterable: true,                                 
                                 referencedParameters: 'RetrieveProjectVersion', 
                                 script: 
                                     [$class: 'GroovyScript', 
@@ -915,64 +925,71 @@ pipeline {
         
         stage ("Check out scripts") {
             steps {
-                git credentialsId: 'github_creds', url: 'https://github.com/commscope-qa-automation/RobotProject.git'
+                checkout([
+                	$class: 'GitSCM', 
+                	branches: [[name: '*/master']], 
+                	doGenerateSubmoduleConfigurations: false, 
+                	extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '../']], 
+                	submoduleCfg: [], 
+                	userRemoteConfigs: [[credentialsId: 'github_creds', url: 'https://github.com/commscope-qa-automation/RobotProject.git']]
+                	])
             }
         }
         
         stage ("Run scripts") {
             steps {
             	script {
-	                def buildNumber = currentBuild.number
-	                def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
-	                currentBuild.displayName = "#" + buildNumber + " " + loginUser + " - " + params.TestSuiteName
-	                //currentBuild.description = "This build is executed by " + loginUser
-            	}            	
-            	
-                bat '''IF "%TestSuiteName%." == "." GOTO LabelComplete
-                ECHO Go to the Robot Framework directory
-                CD %WORKSPACE%
-                DEL /q %OutputDir%\\%TestSuiteName%_*.xml
-                DEL /q %OutputDir%\\%TestSuiteName%_*.html
-                DEL /q %OutputDir%\\Screenshots\\*%TestSuiteName%*.png
-                FOR /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") DO @IF EXIST "%%d" rd /s /q "%%d"
-                
-                IF "%TestCaseRunFilter1%" == "" (SET "TestCaseRunFilter=%TestCaseRunFilter2%") ELSE (SET "TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %")
-                
-                ECHO Start Robot Framework automation
-                robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ECOManageRobotProject/TestSuite_ECOManage/TestSuite_%TestSuiteName%.robot
-                
-                :LabelComplete
-                ECHO Completed!'''
+	                currentBuild.displayName = "#" + currentBuild.number + " " + loginUser + " - " + params.TestSuiteName
+            	            	
+                    if (TestSuiteName != "") {
+                        bat '''DEL /q %OutputDir%\\%TestSuiteName%_*.xml
+                        DEL /q %OutputDir%\\%TestSuiteName%_*.html
+                        DEL /q %OutputDir%\\Screenshots\\*%TestSuiteName%*.png
+                        FOR /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") DO @IF EXIST "%%d" rd /s /q "%%d"
+                        
+                        IF "%TestCaseRunFilter1%" == "" (SET "TestCaseRunFilter=%TestCaseRunFilter2%") ELSE (SET "TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %")
+                        
+                        ECHO Start Robot Framework automation
+                        robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECOManage/TestSuite_%TestSuiteName%.robot'''
+                    }
+            	}
             }
         }
-        
-        stage("Publish result") {
-            steps {
-                script {
-                  step(
-                    [
-                      $class                    : 'RobotPublisher',
-                      outputPath                : '${OutputDir}',
-                      outputFileName            : "${TestSuiteName}_output.xml",
-                      reportFileName            : "${TestSuiteName}_report.html",
-                      logFileName               : "${TestSuiteName}_log.html",
-                      disableArchiveOutput      : false,
-                      passThreshold             : 100,
-                      unstableThreshold         : 95.0,
-                      otherFiles                : "Screenshots/*${TestSuiteName}*.png,Output/*${TestSuiteName}*/*"
-                    ]
-                  )
-                }
-            }
-        }
-        
-        stage("Update TC status") {
-            steps {
-                script {
+    }
+    
+    post {
+        always {
+            script {
+               if (TestSuiteName != "") { 
                     /*
                     ########################################################################
-                    Get values from build parameters
+                    Start Robot Framework publish
                     ########################################################################
+                    */                
+                    step(
+                        [
+                          $class                    : 'RobotPublisher',
+                          outputPath                : '${OutputDir}',
+                          outputFileName            : "${TestSuiteName}_output.xml",
+                          reportFileName            : "${TestSuiteName}_report.html",
+                          logFileName               : "${TestSuiteName}_log.html",
+                          disableArchiveOutput      : false,
+                          passThreshold             : 100,
+                          unstableThreshold         : 95,
+                          otherFiles                : "Screenshots/*${TestSuiteName}*.png,Output/*${TestSuiteName}*/*"
+                        ]
+                      )
+    
+                    
+                    /*
+                    ########################################################################
+                    Start Etrack
+                    ########################################################################
+                    */
+                    /*
+                    ##################################################
+                    Get values from build parameters
+                    ##################################################
                     */
                     def version = params.ProjectVersion
                     def cycle = params.ProjectCycle
@@ -983,11 +1000,11 @@ pipeline {
                     
                     def workspace = env.WORKSPACE
                     def junitFile = workspace + "/" + robotResultPath + "/" + testsuiteName + "_junit.xml"
-                    println("junit xml file: " + junitFile)
+                    //println("junit xml file: " + junitFile)
                     /*
-                    ########################################################################
+                    ##################################################
                     Start processing
-                    ########################################################################
+                    ##################################################
                     */
                     println("-----------------------------------------------------------------------------")
                     if (version == "" || cycle == "") {
@@ -998,7 +1015,6 @@ pipeline {
                     
                     // Get Etrack username and password from global credentials
                     println("Get Etrack credentials.")
-                    def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
                     //println("loginUser:" + loginUser)
                     
                     def username = ""
@@ -1068,55 +1084,63 @@ pipeline {
                     (code, content) = sendGetRequest(jiraBaseURL+"/rest/zapi/latest/execution?cycleId="+cycleId+"&folderId="+folderId, username, password)
                     assert code == 200
                     executions = parseJson(content).executions
-                    
-                    def xmlFile = readFile junitFile
-                    def testcases = new groovy.util.XmlParser().parseText(xmlFile).testcase
-                    testcases.each {
-                    	issue = it.@name
-                    	failure = it.failure
-                    	executionId = executions.find {it.issueKey == issue}?.id
-                    	if (executionId != null) {
-                    		println("------------------------\nTest Case: " + issue + "\n------------------------")
-                    		status = "1"
-                    		if (!failure.isEmpty()) {
-                    			status = "2"
-                    		}
-                    		body = '{"status": "' + status + '"}'
-                    		(code, content) = sendPutRequest(jiraBaseURL+"/rest/zapi/latest/execution/"+executionId+"/execute", body, username, password)
-                    		assert code == 200
-                    	}
-                    }
-                    println("-----------------------------------------------------------------------------")        
-                }
+                    if (executions.size() > 0) {
+                        def xmlFile = readFile junitFile
+                        def testcases = new groovy.util.XmlParser().parseText(xmlFile).testcase
+                        testcases.each {
+                        	issue = it.@name
+                        	failure = it.failure
+                        	executionId = executions.find {it.issueKey == issue}?.id
+                        	if (executionId != null) {
+                        		println("------------------------\nTest Case: " + issue + "\n------------------------")
+                        		status = "1"
+                        		if (!failure.isEmpty()) {
+                        			status = "2"
+                        		}
+                        		body = '{"status": "' + status + '"}'
+                        		(code, content) = sendPutRequest(jiraBaseURL+"/rest/zapi/latest/execution/"+executionId+"/execute", body, username, password)
+                        		assert code == 200
+                        	}
+                        }
+                        println("-----------------------------------------------------------------------------") 
+                    } else {
+                        println("No executions...")
+                    }    
+                            
+                    /*
+                    ########################################################################
+                    Start Email notification
+                    ########################################################################
+                    */                
+                    emailext body: '''<html>
+        				  <head>
+        					<title>Robot Framework Automation Result</title>
+        				  </head>
+        				  <body>
+        					<h1>ECO Robot Framework Automation Result</h1>
+        					   <p>
+        							  $PROJECT_NAME - ${TestSuiteName} - Build # $BUILD_NUMBER - $BUILD_STATUS
+        					   </p>
+        					   <p>
+        							  Check console output at $BUILD_URL to view the results.
+        					  </p>
+        					   <p>
+        						   <a href=${ROBOT_REPORTLINK}>Robot Framework Report</a>
+        					   </p>
+        					   <p>Failed Test Cases:</p>
+        					   <p>${ROBOT_FAILEDCASES}</p>
+        					</h1>
+        				  </body>
+        				</html>''', 
+        			mimeType: 'text/html',  
+        			recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']], 
+        			replyTo: '$DEFAULT_REPLYTO', 
+        			subject: '$PROJECT_NAME - ${TestSuiteName} - ${ROBOT_PASSRATIO} -- PASS ${ROBOT_PASSPERCENTAGE}%'
+               }
+               else {
+                   println("No test suite")
+               }
             }
-        }        
-    }
-    post {
-        always {
-            emailext body: '''<html>
-				  <head>
-					<title>Robot Framework Automation Result</title>
-				  </head>
-				  <body>
-					<h1>ECO Robot Framework Automation Result</h1>
-					   <p>
-							  $PROJECT_NAME - ${TestSuiteName} - Build # $BUILD_NUMBER - $BUILD_STATUS
-					   </p>
-					   <p>
-							  Check console output at $BUILD_URL to view the results.
-					  </p>
-					   <p>
-						   <a href=${ROBOT_REPORTLINK}>Robot Framework Report</a>
-					   </p>
-					   <p>Failed Test Cases:</p>
-					   <p>${ROBOT_FAILEDCASES}</p>
-					</h1>
-				  </body>
-				</html>''', 
-			mimeType: 'text/html',  
-			recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']], 
-			replyTo: '$DEFAULT_REPLYTO', 
-			subject: '$PROJECT_NAME - ${TestSuiteName} - ${ROBOT_PASSRATIO} -- PASS ${ROBOT_PASSPERCENTAGE}%'
         }
     }    
 }   
