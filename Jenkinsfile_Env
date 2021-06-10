@@ -200,7 +200,7 @@ pipeline {
             	script {
 	                currentBuild.displayName = "#" + currentBuild.number + " " + LOGIN_USER + " - " + params.Environment
             	            	
-                    bat "robot -t "Check Status Or Restart App" -v "ENV:%Environment%" -v "OPER:%Operation%" -v "APPS:%Application%" -v "AWS_PRIVATE_KEY:%SSHKey%" ../ECOManageRobotProject/TestSuite_ECOManage/ECOEnv.robot"                       
+                    bat 'robot -t "Check Status Or Restart App" -v "ENV:%Environment%" -v "OPER:%Operation%" -v "APPS:%Application%" -v "AWS_PRIVATE_KEY:%SSHKey%" ../ECOManageRobotProject/TestSuite_ECOManage/ECOEnv.robot'                       
                 }
             }
         }
