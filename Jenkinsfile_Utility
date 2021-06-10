@@ -8,6 +8,7 @@ def AGENT_LABLE = "robot_windows_" + LOGIN_USER
                     
 pipeline {    
     options {skipDefaultCheckout(true)}
+    
     //agent any
     agent { 
         label {
