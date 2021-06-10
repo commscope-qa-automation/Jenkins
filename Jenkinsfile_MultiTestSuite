@@ -323,11 +323,14 @@ pipeline {
                     assert code == 200
                     executions = parseJson(content).executions
                     if (executions.size() > 0) {
-                        def xmlFile = readFile junitFile
-                        def testcases = new groovy.util.XmlParser().parseText(xmlFile).testcase
+                        def xml = readFile junitFile
+                        def testcases = new groovy.util.XmlParser().parseText(xml).value()
+                        //def testcases = new groovy.util.XmlParser().parseText(xmlFile).testcase
                         testcases.each {
-                        	issue = it.@name
-                        	failure = it.failure
+                            issue = it.attributes()['name']
+                            failure = it.value()
+                        	//issue = it.@name
+                        	//failure = it.failure
                         	executionId = executions.find {it.issueKey == issue}?.id
                         	if (executionId != null) {
                         		println("------------------------\nTest Case: " + issue + "\n------------------------")
