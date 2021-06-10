@@ -27,6 +27,9 @@ pipeline {
 	                    "Configure Device LAN IP Via ECO API",
 	                    "Capture Packets On RG Gateway",
 	                    "Capture Packets On AWS Servers"
+	                    "Get Device Classifiers",
+	                    "Compare Device Classifiers From Two Environments",
+	                    "Generate Excel With Data From Files"
 	                    ]
                     '''
                     
@@ -39,12 +42,17 @@ pipeline {
 	                        return "<b>Capture packets on 10.77.126.2 (Santa Clara RG Gateway) or 74.118.172.228 (Autin RG Gateway) depending on where the device is located.</b>"
 	                    } else if (Utility == 'Capture Packets On AWS Servers') {
 	                        return "<b>Capture packets on any specified AWS servers.</b>"
+	                    } else if (Utility == 'Get Device Classifiers') {
+	                        return "<b>Call REST API to get device classifiers and save to text file and excel file.</b>"
+	                    } else if (Utility == 'Compare Device Classifiers From Two Environments') {
+	                        return "<b>Get device classifiers from two environments and save each to text file and all to excel file.</b>"
+	                    } else if (Utility == 'Generate Excel With Data From Files') {
+	                        return "<b>Generate excel file with selected data from files.</b>"
 	                    } else {
 	                        return "No utility is selected."
 	                    }
                     '''
-                    
-                    
+                                       
                     properties([
                         parameters([
                             string(
@@ -122,7 +130,14 @@ pipeline {
                     if (params.Utility == "") {
                         println("No utility is selected.")
                     } else {
-                        bat 'robot -t "%Utility%" --log Utility_log_1.html --output Utility_output_1.xml --report Utility_report_1.html --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECOManage/Utility.robot'
+                        bat '''
+                        cd ../ECOManageRobotProject/TestSuite_Utility
+                        for /F %%a in ('findstr /c:"%Utility%" *.robot') do set "output=%%a"
+                        for /F "tokens=1 delims=:" %%a in ("Device.robot:Capture") do (
+                            set "testsuite=%%a"
+                        )
+                        cd %WORKSPACE%
+                        robot -t "%Utility%" --log Utility_log_1.html --output Utility_output_1.xml --report Utility_report_1.html --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_Utility/%testsuite%'''
                     }
                 }
             }
