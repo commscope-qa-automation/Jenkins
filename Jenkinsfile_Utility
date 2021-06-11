@@ -26,7 +26,7 @@ pipeline {
 	                    "Configure Device After Factory Reset",
 	                    "Configure Device LAN IP Via ECO API",
 	                    "Capture Packets On RG Gateway",
-	                    "Capture Packets On AWS Servers"
+	                    "Capture Packets On AWS Servers",
 	                    "Get Device Classifiers",
 	                    "Compare Device Classifiers From Two Environments",
 	                    "Generate Excel With Data From Files"
