@@ -33,25 +33,83 @@ pipeline {
 	                    ]
                     '''
                     
-                    def information = '''
-	                    if (Utility == "Configure Device After Factory Reset") {
-	                        return "<b>Currently only support 5268AC, BGW, NVG devices in Santa Clara and Austin lab.</b>"
-	                    } else if (Utility == "Configure Device LAN IP Via ECO API") {
-	                        return "<b>Currently only support 5268AC, BGW, NVG devices.</b>"
-	                    } else if (Utility == "Capture Packets On RG Gateway") {
-	                        return "<b>Capture packets on 10.77.126.2 (Santa Clara RG Gateway) or 74.118.172.228 (Autin RG Gateway) depending on where the device is located.</b>"
-	                    } else if (Utility == "Capture Packets On AWS Servers") {
-	                        return "<b>Capture packets on any specified AWS servers.</b>"
-	                    } else if (Utility == "Get Device Classifiers") {
-	                        return "<b>Call REST API to get device classifiers and save to text file and excel file.</b>"
-	                    } else if (Utility == "Compare Device Classifiers From Two Environments") {
-	                        return "<b>Get device classifiers from two environments and save each to text file and all to excel file.</b>"
-	                    } else if (Utility == "Generate Excel With Data From Files") {
-	                        return "<b>Generate excel file with selected data from files.</b>"
+                    def information = """
+	                    if (Utility == 'Configure Device After Factory Reset') {
+	                        return '''<p>
+	                        <b>Currently only support 5268AC, BGW, NVG devices in Santa Clara and Austin lab.</b>
+	                        </p>
+	                        <p style="color:blue">
+	                        <b>Input device SerialNumber:</b> - Device with the serialnumber has already bootstrapped to environment<br>
+	                        <b>Input acs url:</b> - This acs_url will be configured on the device<br>
+	                        <p>'''
+	                    } else if (Utility == 'Configure Device LAN IP Via ECO API') {
+	                        return '''<p>
+	                        <b>Currently only support 5268AC, BGW, NVG devices.</b>
+	                        </p>
+	                        <p style="color:blue">
+	                        <b>Input device SerialNumber:</b> - Device with the serialnumber has already bootstrapped to environment<br>
+	                        <b>Input device OUI:</b> - The device OUI<br>
+	                        <b>Input environment info: </b>SOAP API URL and Auth<br>
+	                            - API URL - base API URL<br>
+	                            - Auth Method - The values can be http_auth, client_certs, wsse_user_token<br>
+	                            - Auth List - A list of auth data corresponding to the auth method, e.g., ['nibws', '2wire'] for http_auth or ['webservice_att_labs.crt.pem', 'webservice_att_labs.key.pem'] for client_certs	                        
+	                        <p>'''
+	                    } else if (Utility == 'Capture Packets On RG Gateway') {
+	                        return '''<p>
+	                        <b>Capture packets on 10.77.126.2 (Santa Clara RG Gateway) or 74.118.172.228 (Autin RG Gateway) depending on where the device is located.</b>
+	                        </p>
+	                        <p style="color:blue">
+	                        <b>Input device SerialNumber:</b> - Device with the serialnumber has already bootstrapped to environment
+	                        <p>'''
+	                    } else if (Utility == 'Capture Packets On AWS Servers') {
+	                        return '''<p>
+	                        <b>Capture packets on any specified AWS servers.</b>
+	                        </p>
+	                        <p style="color:blue">
+	                        <b>Input device SerialNumber: </b>Device with the serialnumber has already bootstrapped to environment<br>
+	                        <b>Input bastion server info: </b>AWS Bastion server information format: private key;bastion server ip;server user<br> 
+	                        <b>Input AWS servers: </b>One or multiple server IPs separated by comma , 
+	                        </p>'''
+	                    } else if (Utility == 'Get Device Classifiers') {
+	                        return '''<p>
+	                        <b>Call REST API to get device classifiers and save to text file and excel file.</b><br>
+	                        </p>
+	                        <p style="color:blue">
+	                        <b>Input serialnumber:</b> Device with the serialnumber has already bootstrapped to environment<br>
+	                        <b>Input environment info: </b>REST API URL and Auth<br>
+	                            - API URL - base API URL<br>
+	                            - Auth Method - The values can be http_auth, client_certs, wsse_user_token<br>
+	                            - Auth List - A list of auth data corresponding to the auth method, e.g., ['nibws', '2wire'] for http_auth or ['webservice_att_labs.crt.pem', 'webservice_att_labs.key.pem'] for client_certs	                        
+	                        </p>'''
+	                    } else if (Utility == 'Compare Device Classifiers From Two Environments') {
+	                        return '''<p>
+	                        <b>Get device classifiers from two environments and save each to text file and all to excel file.</b><br>
+	                        </p>
+	                        <p style="color:blue">
+	                        <b>Input serialnumber for environment #1:</b> Device with the serialnumber has already bootstrapped to environment #1<br>
+	                        <b>Input environment #1 info: </b>REST API URL and Auth<br>
+	                            - API URL - base API URL<br>
+	                            - Auth Method - The values can be http_auth, client_certs, wsse_user_token<br>
+	                            - Auth List - A list of auth data corresponding to the auth method, e.g., ['nibws', '2wire'] for http_auth or ['webservice_att_labs.crt.pem', 'webservice_att_labs.key.pem'] for client_certs<br>
+	                        <b>Input serialnumber for environment #2: </b>Device with the serialnumber has already bootstrapped to environment #2<br>
+	                        <b>Input environment #2 info: </b>REST API URL and Auth<br>
+	                            - API URL - base API URL<br>
+	                            - Auth Method - The values can be http_auth, client_certs, wsse_user_token<br>
+	                            - Auth List - A list of auth data corresponding to the auth method, e.g., ['nibws', '2wire'] for http_auth or ['webservice_att_labs.crt.pem', 'webservice_att_labs.key.pem'] for client_certs<br>
+	                            </p>'''
+	                    } else if (Utility == 'Generate Excel With Data From Files') {
+	                        return '''<p>
+	                        <b>Generate excel file with selected data from files.</b><br>
+	                        </p>
+							<p style="color:blue">
+							<b>Input the path of the txt files: </b>The data from all the txt files under the path will be added to Excel worksheet<br>
+							<b>Input the parameter to filter the files (leave it empty if no filter): </b>Add data from those txt files containing the parameter to Excel worksheet<br>
+							<b>Input the Excel worksheet name: </b>The first worksheet name in Excel
+							</p>'''
 	                    } else {
-	                        return "No utility is selected."
+	                        return 'No utility is selected.'
 	                    }
-                    '''
+                    """
                                        
                     properties([
                         parameters([
