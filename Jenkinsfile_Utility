@@ -38,15 +38,15 @@ pipeline {
 	                        return "<b>Currently only support 5268AC, BGW, NVG devices in Santa Clara and Austin lab.</b>"
 	                    } else if (Utility == "Configure Device LAN IP Via ECO API") {
 	                        return "<b>Currently only support 5268AC, BGW, NVG devices.</b>"
-	                    } else if (Utility == 'Capture Packets On RG Gateway') {
+	                    } else if (Utility == "Capture Packets On RG Gateway") {
 	                        return "<b>Capture packets on 10.77.126.2 (Santa Clara RG Gateway) or 74.118.172.228 (Autin RG Gateway) depending on where the device is located.</b>"
-	                    } else if (Utility == 'Capture Packets On AWS Servers') {
+	                    } else if (Utility == "Capture Packets On AWS Servers") {
 	                        return "<b>Capture packets on any specified AWS servers.</b>"
-	                    } else if (Utility == 'Get Device Classifiers') {
+	                    } else if (Utility == "Get Device Classifiers") {
 	                        return "<b>Call REST API to get device classifiers and save to text file and excel file.</b>"
-	                    } else if (Utility == 'Compare Device Classifiers From Two Environments') {
+	                    } else if (Utility == "Compare Device Classifiers From Two Environments") {
 	                        return "<b>Get device classifiers from two environments and save each to text file and all to excel file.</b>"
-	                    } else if (Utility == 'Generate Excel With Data From Files') {
+	                    } else if (Utility == "Generate Excel With Data From Files") {
 	                        return "<b>Generate excel file with selected data from files.</b>"
 	                    } else {
 	                        return "No utility is selected."
@@ -133,7 +133,7 @@ pipeline {
                         bat '''
                         cd ../ECOManageRobotProject/TestSuite_Utility
                         for /F %%a in ('findstr /c:"%Utility%" *.robot') do set "output=%%a"
-                        for /F "tokens=1 delims=:" %%a in ("Device.robot:Capture") do (
+                        for /F "tokens=1 delims=:" %%a in ("%output%") do (
                             set "testsuite=%%a"
                         )
                         cd %WORKSPACE%
