@@ -55,7 +55,19 @@ pipeline {
 									"LAS - Log Archive Server - LAS",
 									"BDC - Bulk Data Collect writing (bdc fwll ngfw) - DMC"									
                             	]
-                            } else if (Operation == "Restart Application") {
+                            } else if (Operation == "Check Server Log For Today") {
+                            	return [
+									"DMC - ECO Manage for Devices - DMC:selected",
+									"SMS - ECO Manage for Services - SMS",
+									"TM - Traffic Manager - TM",
+									"TR157BRIDGE - TR157bridge - TR157BRIDGE",
+									"COLLECT - ECO Collect - COLLECT",
+									"ESP - ESP Writer - ESP",
+									"NOTIF - ECO Notification Service - NOTIF",
+									"RGACT DISPATCHER - RGActivation Dispatcher - RGACT DISPATCHER",
+									"LAS - Log Archive Server - LAS"
+                            	]	
+                            }else if (Operation == "Restart Application") {
                             	return [
 									"DMC - ECO Manage for Devices + Nginx - DMC:selected",
 									"SMS - ECO Manage for Services + Nginx - SMS",

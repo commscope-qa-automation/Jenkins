@@ -357,7 +357,7 @@ pipeline {
 				  <body>
 					<h1>ECO Robot Framework Automation Result</h1>
 					   <p>
-							  $PROJECT_NAME - ${TestSuiteName} - Build # $BUILD_NUMBER - $BUILD_STATUS
+							  $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS
 					   </p>
 					   <p>
 							  Check console output at $BUILD_URL to view the results.
@@ -373,7 +373,7 @@ pipeline {
 			mimeType: 'text/html',  
 			recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']], 
 			replyTo: '$DEFAULT_REPLYTO', 
-			subject: '$PROJECT_NAME - ${TestSuiteName} - ${ROBOT_PASSRATIO} -- PASS ${ROBOT_PASSPERCENTAGE}%'            
+			subject: '$PROJECT_NAME - ${ROBOT_PASSRATIO} -- PASS ${ROBOT_PASSPERCENTAGE}%'            
         }        
     }
 }   
