@@ -163,7 +163,7 @@ pipeline {
                                     script: [
                                         classpath: [], 
                                         sandbox: false, 
-                                        script: "return ['Check Status:selected', 'Restart Application']"
+                                        script: "return ['Check Status:selected', 'Check Server Log For Today', 'Restart Application']"
                                     ]
                                 ]
                             ],							
