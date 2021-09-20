@@ -999,17 +999,14 @@ pipeline {
                             ]                            
                         ])
                     ])
+                    
+                    env.AGENT_LABEL = "robot_" + OS.toLowerCase() + "_" + LOGIN_USER   
+
                 }
             }
         }
         
-        stage ("Check out scripts") {
-            steps {
-                script {
-                    env.AGENT_LABEL = "robot_" + OS.toLowerCase() + "_" + LOGIN_USER   
-                }
-            }
-                
+        stage ("Check out scripts") {   
             agent { label "${env.AGENT_LABEL}" }
                 
             steps {
