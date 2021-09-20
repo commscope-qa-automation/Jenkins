@@ -1008,8 +1008,9 @@ pipeline {
                 script {
                     env.AGENT_LABEL = "robot_" + OS.toLowerCase() + "_" + LOGIN_USER   
                 }
+            }
                 
-                agent { label "${env.AGENT_LABEL}" }
+            agent { label "${env.AGENT_LABEL}" }
                 
             steps {
                 checkout([
