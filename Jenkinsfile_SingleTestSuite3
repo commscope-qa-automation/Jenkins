@@ -73,7 +73,7 @@ def AGENT_LABEL = ""
 pipeline {
     options {skipDefaultCheckout(true)}
 
-    agent { label("robot_windows_" + LOGIN_USER || "robot_linux_" + LOGIN_USER) }
+    agent { label('robot_windows_' + LOGIN_USER + ' || robot_linux_' + LOGIN_USER) }
     
     stages {
         stage('Parameters'){
