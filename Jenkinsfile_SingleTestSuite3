@@ -68,12 +68,12 @@ def getLoginUser() {
 }
 
 def LOGIN_USER = getLoginUser()
-def AGENT_LABEL = "robot_windows_" + LOGIN_USER
+def AGENT_LABEL = ""
 
 pipeline {
     options {skipDefaultCheckout(true)}
 
-    agent none
+    agent { label("robot_windows_ || robot_linux_" + LOGIN_USER) }
     
     stages {
         stage('Parameters'){
@@ -999,16 +999,11 @@ pipeline {
                             ]                            
                         ])
                     ])
-                    
-                    AGENT_LABEL = "robot_" + OS.toLowerCase() + "_" + LOGIN_USER   
-
                 }
             }
         }
         
-        stage ("Check out scripts") {   
-            agent { label "${AGENT_LABEL}" }
-                
+        stage ("Check out scripts") {      
             steps {
                 checkout([
                 	$class: 'GitSCM', 
@@ -1022,7 +1017,6 @@ pipeline {
         }
         
         stage ("Run scripts") {
-        	agent { label "${AGENT_LABEL}" }
             steps {
             	script {
 	                currentBuild.displayName = "#" + currentBuild.number + " " + LOGIN_USER + " - " + params.TestSuiteName
@@ -1053,8 +1047,6 @@ pipeline {
         }
         
         stage ("Post Action") {
-        	agent { label "${AGENT_LABEL}" }
-        	
         	steps {
         		echo "Publish robot results, update Etrack test case status if enabled, and send email."
         	}
