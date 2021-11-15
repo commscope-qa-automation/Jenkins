@@ -1095,12 +1095,12 @@ pipeline {
                     	else {
                     		sh '''
                     		echo test: ${TestCaseRunFilter1}
-                    		if [ ${TestCaseRunFilter1} == "" ] 
-                    		then 
-                    			TestCaseRunFilter=${TestCaseRunFilter2} 
-                    		else 
-                    			TestCaseRunFilter=$(echo -t ${TestCaseRunFilter//,/ -t })
-                    		fi
+                    		if [ "${TestCaseRunFilter1}" == "" ]
+							then 
+								TestCaseRunFilter=${TestCaseRunFilter2} 
+							else 
+								TestCaseRunFilter=$(echo -t ${TestCaseRunFilter1//,/ -t })	
+							fi
                     		
                     		echo Start Robot Framework automation
                     		robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${TestSuiteName}.robot'''
