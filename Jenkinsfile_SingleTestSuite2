@@ -1099,7 +1099,7 @@ pipeline {
                     		then 
                     			TestCaseRunFilter=${TestCaseRunFilter2} 
                     		else 
-                    			TestCaseRunFilter=${echo -t ${TestCaseRunFilter//,/ -t }}
+                    			TestCaseRunFilter=$(echo -t ${TestCaseRunFilter//,/ -t })
                     		fi
                     		
                     		echo Start Robot Framework automation
