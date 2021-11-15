@@ -1108,15 +1108,15 @@ pipeline {
                     		sh '''
                     		if [ -d "${OutputDir}" ] 
                     		then
-                    			mv -f ${OutputDir}/${TestSuiteName}_*.xml
-                    			mv -f ${OutputDir}/${TestSuiteName}_*.html
+                    			mv -f "${OutputDir}/${TestSuiteName}_*.xml"
+                    			mv -f "${OutputDir}/${TestSuiteName}_*.html"
                     			if [ -d "${OutputDir}/Screenshots" ]
                     			then
-                    				mv -f ${OutputDir}/Screenshots/*${TestSuiteName}*.png
+                    				mv -f "${OutputDir}/Screenshots/*${TestSuiteName}*.png"
                     			fi
                     			if [ -d "${OutputDir}/Output" ]
                     			then
-                    				mv -f ${OutputDir}/Output/*${TestSuiteName}*
+                    				mv -f "${OutputDir}/Output/*${TestSuiteName}*"
                     			fi
                     		fi                    		
                     		
