@@ -215,11 +215,13 @@ pipeline {
                     }
                 }
                 
-                if (params.OS == "windows") {
-                	bat 'rebot --processemptysuite --outputdir %OutputDir% --output Final_output.xml --report Final_report.html --xunit Final_junit.xml %OutputDir%/*_output.xml'
-                }
-                else {
-                	sh 'rebot --processemptysuite --outputdir ${OutputDir} --output Final_output.xml --report Final_report.html --xunit Final_junit.xml ${OutputDir}/*_output.xml'
+                script {
+	                if (params.OS == "windows") {
+	                	bat 'rebot --processemptysuite --outputdir %OutputDir% --output Final_output.xml --report Final_report.html --xunit Final_junit.xml %OutputDir%/*_output.xml'
+	                }
+	                else {
+	                	sh 'rebot --processemptysuite --outputdir ${OutputDir} --output Final_output.xml --report Final_report.html --xunit Final_junit.xml ${OutputDir}/*_output.xml'
+	                }
                 }
             }
         }
