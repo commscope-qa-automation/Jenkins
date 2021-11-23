@@ -1,5 +1,9 @@
 properties([
     parameters([
+        choice(
+            choices: ['windows', 'linux'], 
+            name: 'OS'
+        ),    
         string(
             defaultValue: 'Jenkins_Robot_Results', 
             name: 'OutputDir',
@@ -90,18 +94,25 @@ def getLoginUser() {
     def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
     return loginUser
 }
+
 def LOGIN_USER = getLoginUser()
-def AGENT_LABLE = "robot_windows_" + LOGIN_USER
+
+def getlabel(os) {
+	if (!os) {
+		os = "windows"
+	} 
+	label = "robot_" + os
+	if ( os == "windows" ) {
+		label = label + "_" + getLoginUser()
+	}
+	return label
+}
                     
 pipeline {
     options {skipDefaultCheckout(true)}
     
     //agent any
-    agent { 
-        label {
-            label "${AGENT_LABLE}"
-        }
-    }
+    agent {label getlabel(params.OS)}
                    
     stages {
         stage ("Check out scripts") {
@@ -122,10 +133,25 @@ pipeline {
                 script {
                     currentBuild.displayName = currentBuild.number + " " + LOGIN_USER
                     
-                    bat 'IF EXIST %OutputDir% RD /S /Q %OutputDir%'
+                    if (params.OS == "windows") {
+                    	bat 'IF EXIST %OutputDir% RD /S /Q %OutputDir%'
+                    }
+                    else {
+                    	sh 'rm -f "${OutputDir}/*"'
+                    }
                 }
                 
                 script {
+                	if (env.JOB_NAME.contains('ATT')) {
+	                    env.CUSTOMER = "Manage"
+	                } else if (env.JOB_NAME.contains('Ziply')) {
+	                    env.CUSTOMER = "_Ziply"
+	                } else if (env.JOB_NAME.contains('Sasktel')) {
+	                    env.CUSTOMER = "_Sasktel"
+	                } else {
+	                    env.CUSTOMER = "_Test"
+	                }
+                
                     println("Extract the input data")
                     def list = []
                     def counter = 1
@@ -160,7 +186,12 @@ pipeline {
                             echo "Create stage: ${env.TestSuiteName} - ${env.ProjectCycle}"
                             stage(env.TestSuiteName + "-" + env.ProjectCycle) {
                                 catchError(stageResult: 'FAILURE') {
-                                    bat 'robot %TestCaseRunFilter% --outputdir %OutputDir% --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECOManage/TestSuite_%TestSuiteName%.robot'
+                                    if (params.OS == "windows") {
+				                    	bat 'robot %TestCaseRunFilter% --outputdir %OutputDir% --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%TestSuiteName%.robot'
+				                    }
+				                    else {
+				                    	sh 'robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${TestSuiteName}.robot'
+				                    }     
                                 }
                             }
 
@@ -184,7 +215,14 @@ pipeline {
                     }
                 }
                 
-                bat 'rebot --processemptysuite --outputdir %OutputDir% --output Final_output.xml --report Final_report.html --xunit Final_junit.xml %OutputDir%/*_output.xml'
+                script {
+	                if (params.OS == "windows") {
+	                	bat 'rebot --processemptysuite --outputdir %OutputDir% --output Final_output.xml --report Final_report.html --xunit Final_junit.xml %OutputDir%/*_output.xml'
+	                }
+	                else {
+	                	sh 'rebot --processemptysuite --outputdir ${OutputDir} --output Final_output.xml --report Final_report.html --xunit Final_junit.xml ${OutputDir}/*_output.xml'
+	                }
+                }
             }
         }
     }
