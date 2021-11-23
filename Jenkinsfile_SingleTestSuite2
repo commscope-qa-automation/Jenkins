@@ -67,20 +67,19 @@ def getLoginUser() {
     return loginUser
 }
 
+def LOGIN_USER = getLoginUser()
+
 def getlabel(os) {
 	label = "robot_" + os
 	if ( os == "windows" ) {
-		label = label + "_" + getLoginUser()
+		label = label + "_" + LOGIN_USER
 	}
 	return label
 }
 
-def LOGIN_USER = getLoginUser()
-
 pipeline {
     options {skipDefaultCheckout(true)}
 
-    //agent { label "robot_" + params.OS + "_" + LOGIN_USER}
     agent {label getlabel(params.OS)}
     
     stages {
