@@ -1,0 +1,413 @@
+properties([
+    parameters([
+        choice(
+            choices: ['windows', 'linux'], 
+            name: 'OS'
+        ),    
+        string(
+            defaultValue: 'Jenkins_Robot_Results', 
+            name: 'OutputDir',
+            description: 'Relative directory to the workspace. The directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
+            trim: true
+        ),
+        string(
+            defaultValue: 'TestData_Custom', 
+            name: 'TestDataDir',
+            description: 'Relative directory to the workspace. The directory contains test data files.',
+            trim: true
+        ),       
+        text(
+            defaultValue: '''TestData: All_TestData_att76_52141N005018
+TestSuiteName: ECOManageGUI
+TestCaseFilter: -t ECOIOT-391
+EtrackVersion: ATT_FW_Upgrade_5268
+EtrackCycle: GUI Operations
+EtrackFolder: 
+###############################################
+TestData: All_TestData_att76_52141N005018
+TestSuiteName: CR1698IPDR
+TestCaseFilter: -t ECOIOT-4399 -t ECOIOT-4404
+EtrackVersion: ATT_FW_Upgrade_5268
+EtrackCycle: CR1698IPDR
+EtrackFolder: 
+###############################################
+TestData: All_TestData_att76_52141N005018
+TestSuiteName: ECOManageBDC
+TestCaseFilter: 
+EtrackVersion: ATT_FW_Upgrade_5268
+EtrackCycle: Bulk Data Collection
+EtrackFolder: 
+###############################################''', 
+            name: 'InputData',
+            description: ''
+        )
+    ])
+])
+
+def projectList = []
+
+/*
+########################################################################
+Functions
+########################################################################
+*/
+def sendGetRequest(url, username, password) {
+	println("url = " + url)
+	def conn = new URL(url).openConnection()
+	conn.setRequestProperty("Content-Type", "application/json")
+	conn.setRequestProperty("Accept", "application/json")
+	conn.setRequestProperty("Authorization", "Basic " + (username+":"+password).bytes.encodeBase64().toString())
+	conn.requestMethod = 'GET'
+	def code = conn.getResponseCode()
+	def content = conn.getInputStream().getText()
+	return [code, content]
+}
+
+def sendPutRequest(url, body, username, password) {
+	println("url = " + url)
+	println("body = " + body)
+	def conn = new URL(url).openConnection()
+	conn.setRequestProperty("Content-Type", "application/json")
+	conn.setRequestProperty("Accept", "application/json")
+	conn.setRequestProperty("Authorization", "Basic " + (username+":"+password).bytes.encodeBase64().toString())
+	conn.requestMethod = 'PUT'
+
+	conn.setDoOutput(true)
+	OutputStream outStream = conn.getOutputStream()
+	OutputStreamWriter outStreamWriter = new OutputStreamWriter(outStream, "UTF-8")
+	outStreamWriter.write(body)
+	outStreamWriter.flush()
+	outStreamWriter.close()
+	outStream.close()
+
+	def code = conn.getResponseCode()
+	def content = conn.getInputStream().getText()
+	return [code, content]
+}  
+
+@NonCPS
+def parseJson(content) {
+    new groovy.json.JsonSlurperClassic().parseText(content)
+}
+                    
+def getLoginUser() {
+    def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
+    return loginUser
+}
+
+
+def LOGIN_USER = getLoginUser()
+
+def getlabel(os) {
+	label = "robot_" + os
+	if ( os == "windows" ) {
+		label = label + "_" + getLoginUser()
+	}
+	return label
+}
+                    
+pipeline {
+    options {skipDefaultCheckout(true)}
+    
+    //agent any
+    agent {label getlabel(params.OS)}
+                   
+    stages {
+        stage ("Check out scripts") {
+            steps {
+                checkout([
+                	$class: 'GitSCM', 
+                	branches: [[name: '*/master']], 
+                	doGenerateSubmoduleConfigurations: false, 
+                	extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '../']], 
+                	submoduleCfg: [], 
+                	userRemoteConfigs: [[credentialsId: 'github_creds', url: 'https://github.com/commscope-qa-automation/RobotProject.git']]
+                	])
+            }
+        }
+        
+        stage ("Run scripts") {
+            steps {
+                script {
+                    currentBuild.displayName = currentBuild.number + " " + LOGIN_USER
+                    
+                    if (params.OS == "windows") {
+                    	bat 'IF EXIST %OutputDir% RD /S /Q %OutputDir%'
+                    }
+                    else {
+                    	sh 'rm -f "${OutputDir}/*"'
+                    }
+                }
+                
+                script {
+                	if (env.JOB_NAME.contains('ATT')) {
+	                    env.CUSTOMER = "Manage"
+	                } else if (env.JOB_NAME.contains('Ziply')) {
+	                    env.CUSTOMER = "_Ziply"
+	                } else if (env.JOB_NAME.contains('Sasktel')) {
+	                    env.CUSTOMER = "_Sasktel"
+	                } else {
+	                    env.CUSTOMER = "_Test"
+	                }
+                
+                    println("Extract the input data")
+                    def list = []
+                    def counter = 1
+                    def tsList = []
+                    params.InputData.readLines().each {
+                        if (it.contains("#####")) {
+                            println(list)
+                            
+                            env.TestDataFileName = list[0]
+                            env.TestSuiteName = list[1]
+                            env.TestCaseRunFilter = list[2]
+                            env.ProjectVersion = list[3]
+                            env.ProjectCycle = list[4]
+                            env.ProjectFolder = list[5]
+                            env.Prefix = env.TestSuiteName + "_" + env.ProjectCycle.replaceAll(" ", "")
+                            
+                            projectList.add(env.ProjectVersion)
+                            projectList.add(env.ProjectCycle)
+                            projectList.add(env.ProjectFolder)
+                            projectList.add(env.TestSuiteName)                            
+                            
+                            if (tsList.contains(env.TestSuiteName)) {
+                                counter = counter + 1
+                            }
+                            else {
+                                counter = 1
+                                tsList.add(env.TestSuiteName)
+                            }
+                            
+                            env.counter = counter
+                            
+                            echo "Create stage: ${env.TestSuiteName} - ${env.ProjectCycle}"
+                            stage(env.TestSuiteName + "-" + env.ProjectCycle) {
+                                catchError(stageResult: 'FAILURE') {
+                                    if (params.OS == "windows") {
+				                    	bat 'robot %TestCaseRunFilter% --outputdir %OutputDir% --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%TestSuiteName%.robot'
+				                    }
+				                    else {
+				                    	sh 'robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${TestSuiteName}.robot'
+				                    }     
+                                }
+                            }
+
+                            list = []
+                        }
+                        else {
+                            if (it == "") {
+                                println("Empty line...")
+                            } else {
+                                data = it.split(':')
+                                
+                                if (data.size() == 2) {
+                                    list.add(data[1].trim())
+                                    
+                                }
+                                else {
+                                    list.add("")
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (params.OS == "windows") {
+                	bat 'rebot --processemptysuite --outputdir %OutputDir% --output Final_output.xml --report Final_report.html --xunit Final_junit.xml %OutputDir%/*_output.xml'
+                }
+                else {
+                	sh 'rebot --processemptysuite --outputdir ${OutputDir} --output Final_output.xml --report Final_report.html --xunit Final_junit.xml ${OutputDir}/*_output.xml'
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            script {
+                step(
+                    [
+                      $class                    : 'RobotPublisher',
+                      outputPath                : '${OutputDir}',
+                      outputFileName            : "Final_output.xml",
+                      reportFileName            : "Final_report.html",
+                      logFileName               : "*_log.html",
+                      disableArchiveOutput      : false,
+                      passThreshold             : 100,
+                      unstableThreshold         : 95.0,
+                      otherFiles                : "Screenshots/*.png,Output/*/*"
+                    ]
+                  )
+            }
+
+            script {
+                def cycleDict = [:]
+                def projectId = ""
+                def versionId = ""
+                for (i=0 ; i<projectList.size() ; i+=4) {
+                    /*
+                    ########################################################################
+                    Get values from build parameters
+                    ########################################################################
+                    */
+                    def version = projectList[i]  //params.ProjectVersion
+                    def cycle = projectList[i+1]  //params.ProjectCycle
+                    def folder = projectList[i+2]  //params.ProjectFolder
+                    
+                    def testsuiteName= projectList[i+3]  //params.TestSuiteName
+                    def robotResultPath = OutputDir
+                    
+                    def workspace = env.WORKSPACE
+                    def junitFile = workspace + "/" + robotResultPath + "/" + testsuiteName + "_" + cycle.replaceAll(" ", "") + "_junit.xml"
+                    //println("junit xml file: " + junitFile)
+                    /*
+                    ########################################################################
+                    Start processing
+                    ########################################################################
+                    */
+                    println("-----------------------------------------------------------------------------")
+                    if (version == "" || cycle == "") {
+                    	println("Version or Cycle is not provided. No test case status update!!!")
+                    	println("-----------------------------------------------------------------------------")
+                    	return
+                    }
+                    
+                    // Get Etrack username and password from global credentials
+                    println("Get Etrack credentials.")
+                    //println("LOGIN_USER:" + LOGIN_USER)
+                    
+                    def username = ""
+                    def password = ""
+                    def creds = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
+                    	com.cloudbees.plugins.credentials.common.StandardUsernameCredentials.class,
+                    	jenkins.model.Jenkins.instance,
+                    	null,
+                    	null
+                    )
+                    for (c in creds) {
+                    	if (c.id == "etrack_creds_" + LOGIN_USER) {
+                    		username = c.username
+                    		password = c.password
+                    	}
+                    }
+                    //println("username:" + username)
+                    //println("password:" + password)
+                    
+                    // Update JIRA test case status
+                    println("Start updating Etrack test case status.")
+                    def jiraBaseURL = "https://etrack.arrisi.com"
+                    def project = "ECOIOT"
+                    
+                    // Read the junit file generated from Robot Framework
+                    def issue = ""
+                    def code = 0
+                    def content = ""
+                    def status = ""
+                    def cycleId = ""
+                    def folderId = ""
+                    def executionId = ""
+                    
+                    // Get Project Version ID
+                    if (cycleDict.size() == 0) {
+                        (code, content) = sendGetRequest(jiraBaseURL+"/rest/api/latest/project/"+project+"/versions", username, password)
+                        assert code == 200
+                        jsonResponse = parseJson(content)
+                        projectId = jsonResponse.find {it.name == version}?.projectId
+                        if (projectId == null) {
+                            println("Cannot find version " + version)
+                            return                        
+                        }
+                        versionId = jsonResponse.find {it.name == version}.id
+                        
+                        //println("projectId = " + projectId)
+                        //println("versionId = " + versionId)                        
+                    }
+                    
+
+                    if (cycleDict.size() == 0) {
+                        (code, content) = sendGetRequest(jiraBaseURL+"/rest/zapi/latest/cycle?projectId="+projectId+"&versionId="+versionId, username, password)
+                        assert code == 200
+                        jsonResponse = parseJson(content)
+                        cycleDict = jsonResponse
+                    }
+                    cycleId = cycleDict.findAll {it.key != "recordsCount"}.find{it.value.name == cycle}?.key
+                    if (cycleId == null) {
+                        println("Cannot find cycle " + cycle)
+                        return
+                    }
+                    
+                    //println("cycleId = " + cycleId)
+                    	
+                    // Get Folder ID
+                    
+                    (code, content) = sendGetRequest(jiraBaseURL+"/rest/zapi/latest/cycle/"+cycleId+"/folders?projectId="+projectId+"&versionId="+versionId, username, password)
+                    assert code == 200
+                    jsonResponse = parseJson(content)
+                    folderId = jsonResponse.find {it.folderName == folder}?.folderId
+                    if (folderId == null) {
+                    	folderId = ""
+                    }
+                    
+                    //println("folderId = " + folderId)
+                    
+                    //Get execution id
+                    println("--------------------------------------------------")
+                    (code, content) = sendGetRequest(jiraBaseURL+"/rest/zapi/latest/execution?cycleId="+cycleId+"&folderId="+folderId, username, password)
+                    assert code == 200
+                    executions = parseJson(content).executions
+                    if (executions.size() > 0) {
+                        def xml = readFile junitFile
+                        def testcases = new groovy.util.XmlParser().parseText(xml).value()
+                        //def testcases = new groovy.util.XmlParser().parseText(xmlFile).testcase
+                        testcases.each {
+                            issue = it.attributes()['name']
+                            failure = it.value()
+                        	//issue = it.@name
+                        	//failure = it.failure
+                        	executionId = executions.find {it.issueKey == issue}?.id
+                        	if (executionId != null) {
+                        		println("------------------------\nTest Case: " + issue + "\n------------------------")
+                        		status = "1"
+                        		if (!failure.isEmpty()) {
+                        			status = "2"
+                        		}
+                        		body = '{"status": "' + status + '"}'
+                        		(code, content) = sendPutRequest(jiraBaseURL+"/rest/zapi/latest/execution/"+executionId+"/execute", body, username, password)
+                        		assert code == 200
+                        	}
+                        }
+                        println("-----------------------------------------------------------------------------") 
+                    } else {
+                        println("No executions...")
+                    }
+                }
+            }
+            
+            emailext body: '''<html>
+				  <head>
+					<title>Robot Framework Automation Result</title>
+				  </head>
+				  <body>
+					<h1>ECO Robot Framework Automation Result</h1>
+					   <p>
+							  $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS
+					   </p>
+					   <p>
+							  Check console output at $BUILD_URL to view the results.
+					  </p>
+					   <p>
+						   <a href=${ROBOT_REPORTLINK}>Robot Framework Report</a>
+					   </p>
+					   <p>Failed Test Cases:</p>
+					   <p>${ROBOT_FAILEDCASES}</p>
+					</h1>
+				  </body>
+				</html>''', 
+			mimeType: 'text/html',  
+			recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']], 
+			replyTo: '$DEFAULT_REPLYTO', 
+			subject: '$PROJECT_NAME - ${ROBOT_PASSRATIO} -- PASS ${ROBOT_PASSPERCENTAGE}%'            
+        }        
+    }
+}   
