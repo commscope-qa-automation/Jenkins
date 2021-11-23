@@ -95,10 +95,12 @@ def getLoginUser() {
     return loginUser
 }
 
-
 def LOGIN_USER = getLoginUser()
 
 def getlabel(os) {
+	if (!os) {
+		os = "windows"
+	} 
 	label = "robot_" + os
 	if ( os == "windows" ) {
 		label = label + "_" + getLoginUser()
