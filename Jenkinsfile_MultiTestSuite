@@ -143,7 +143,7 @@ pipeline {
                 
                 script {
                 	if (env.JOB_NAME.contains('ATT')) {
-	                    env.CUSTOMER = "Manage"
+	                    env.CUSTOMER = "_ATT"
 	                } else if (env.JOB_NAME.contains('Ziply')) {
 	                    env.CUSTOMER = "_Ziply"
 	                } else if (env.JOB_NAME.contains('Sasktel')) {
@@ -151,6 +151,8 @@ pipeline {
 	                } else {
 	                    env.CUSTOMER = "_Test"
 	                }
+	                
+	                env.ACS = "ECOManage"
                 
                     println("Extract the input data")
                     def list = []
@@ -187,10 +189,10 @@ pipeline {
                             stage(env.TestSuiteName + "-" + env.ProjectCycle) {
                                 catchError(stageResult: 'FAILURE') {
                                     if (params.OS == "windows") {
-				                    	bat 'robot %TestCaseRunFilter% --outputdir %OutputDir% --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%TestSuiteName%.robot'
+				                    	bat 'robot %TestCaseRunFilter% --outputdir %OutputDir% --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot'
 				                    }
 				                    else {
-				                    	sh 'robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${TestSuiteName}.robot'
+				                    	sh 'robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_{ACS}/TestSuite_${TestSuiteName}.robot'
 				                    }     
                                 }
                             }
