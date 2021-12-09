@@ -1082,7 +1082,7 @@ pipeline {
 	                currentBuild.displayName = "#" + currentBuild.number + " " + LOGIN_USER + " - " + params.TestSuiteName
 
 	                if (env.JOB_NAME.contains('ATT')) {
-	                    env.CUSTOMER = "Manage"
+	                    env.CUSTOMER = "_ATT"
 	                } else if (env.JOB_NAME.contains('Ziply')) {
 	                    env.CUSTOMER = "_Ziply"
 	                } else if (env.JOB_NAME.contains('Sasktel')) {
@@ -1090,6 +1090,8 @@ pipeline {
 	                } else {
 	                    env.CUSTOMER = "_Test"
 	                }
+	                
+	                env.ACS = "ECOManage"
             	            	
                     if (TestSuiteName != "") {
                     	if (params.OS == "windows") {
@@ -1103,9 +1105,9 @@ pipeline {
 	                        
 	                        ECHO Start Robot Framework automation
 	                        IF "%TestDataFileName%" == "" (
-	                        	robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%TestSuiteName%.robot
+	                        	robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
 	                        ) ELSE (
-	                        	robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%TestSuiteName%.robot
+	                        	robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
 	                        )
 	                        '''
                     	}
@@ -1135,9 +1137,9 @@ pipeline {
                     		echo Start Robot Framework automation
                     		if [ "${TestDataFileName}" == "" ] 
                     		then
-                    			robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${TestSuiteName}.robot                    			
+                    			robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
                     		else
-                    			robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${TestSuiteName}.robot
+                    			robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
                     		fi
                     		'''
                     	}
