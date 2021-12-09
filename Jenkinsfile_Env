@@ -67,7 +67,7 @@ pipeline {
 									"RGACT DISPATCHER - RGActivation Dispatcher - RGACT DISPATCHER",
 									"LAS - Log Archive Server - LAS"
                             	]	
-                            }else if (Operation == "Restart Application") {
+                            } else if (Operation == "Restart Application") {
                             	return [
 									"DMC - ECO Manage for Devices + Nginx - DMC:selected",
 									"SMS - ECO Manage for Services + Nginx - SMS",
@@ -212,7 +212,7 @@ pipeline {
             	script {
 	                currentBuild.displayName = "#" + currentBuild.number + " " + LOGIN_USER + " - " + params.Environment
             	            	
-                    bat 'robot -t "Check Status Or Restart App" -v "ENV:%Environment%" -v "OPER:%Operation%" -v "APPS:%Application%" -v "AWS_PRIVATE_KEY:%SSHKey%" ../ECOManageRobotProject/TestSuite_ECOManage/ECOEnv.robot'                       
+                    bat 'robot -t "Check Status Or Restart App" -v "ENV:%Environment%" -v "OPER:%Operation%" -v "APPS:%Application%" -v "AWS_PRIVATE_KEY:%SSHKey%" ../ECOManageRobotProject/TestSuite_ECO_ATT/TestSuite_ECOManage/ECOEnv.robot'                       
                 }
             }
         }
