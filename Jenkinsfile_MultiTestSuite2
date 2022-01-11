@@ -111,7 +111,7 @@ def getlabel(os) {
 pipeline {
     options {skipDefaultCheckout(true)}
     
-    //agent any
+    //agent any test
     agent {label getlabel(params.OS)}
                    
     stages {
