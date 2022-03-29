@@ -1091,7 +1091,7 @@ pipeline {
 	                    env.CUSTOMER = "_Test"
 	                }
 	                
-					if params.TestSuiteName.contains("ECOControl") {
+					if (params.TestSuiteName.contains("ECOControl")) {
 						env.ACS = "ECOControl"
 					} else {
 						env.ACS = "ECOManage"
