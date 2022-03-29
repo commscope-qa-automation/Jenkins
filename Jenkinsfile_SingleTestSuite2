@@ -1100,32 +1100,31 @@ pipeline {
                     if (params.TestSuiteName != "") {
                     	if (params.OS == "windows") {
 	                        bat '''
-	                        IF EXIST %OutputDir% DEL /q %OutputDir%\\%TestSuiteName%_*.xml
-	                        IF EXIST %OutputDir% DEL /q %OutputDir%\\%TestSuiteName%_*.html
-	                        IF EXIST %OutputDir%\\Screenshots DEL /q %OutputDir%\\Screenshots\\*%TestSuiteName%*.png
-	                        IF EXIST %OutputDir%\\Output FOR /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") DO @IF EXIST "%%d" rd /s /q "%%d"
+	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.xml
+	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.html
+	                        if exist %OutputDir%\\Screenshots del /q %OutputDir%\\Screenshots\\*%TestSuiteName%*.png
+	                        if exist %OutputDir%\\Output for /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") do @if exist "%%d" rd /s /q "%%d"
 	                        
-	                        IF "%TestCaseRunFilter1%" == "" (SET "TestCaseRunFilter=%TestCaseRunFilter2%") ELSE (SET "TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %")
+	                        if "%TestCaseRunFilter1%" == "" (set "TestCaseRunFilter=%TestCaseRunFilter2%") else (set "TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %")
 	                        
-							ECHO Check if robot-docker is running
-							IF "%(docker inspect -f '{{.State.Running}}' robot-docker)%" == "true" (
-								ECHO start Robot Framework automation in docker container
-								IF "%TestDataFileName%" == "" (
+							echo Check if robot-docker is running
+							for /f %%i in ('docker inspect -f '{{.State.Running}}' robot-docker') do set status=%%i
+							if "%status%" == "'true'" (
+								echo start Robot Framework automation in docker container
+								if "%TestDataFileName%" == "" (
 									docker exec -it robot-docker robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir workspace/%JOB_NAME%/%OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
-								) ELSE (
+								) else (
 									docker exec -it robot-docker robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir workspace/%JOB_NAME%%OutputDir% --log /%TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
 								)								
 
-							) ELSE (
-								ECHO Start Robot Framework automation
-								IF "%TestDataFileName%" == "" (
+							) else (
+								echo Start Robot Framework automation
+								if "%TestDataFileName%" == "" (
 									robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
-								) ELSE (
+								) else (
 									robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
 								)
 							)
-
-
 	                        '''
                     	}
                     	else {
