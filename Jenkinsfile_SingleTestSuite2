@@ -1119,9 +1119,9 @@ pipeline {
 							) ELSE (
 								ECHO Start Robot Framework automation
 								IF "%TestDataFileName%" == "" (
-									robot %TestCaseRunFilter% --outputdir workspace/%JOB_NAME%/%OutputDir% --log workspace/%JOB_NAME%/%TestSuiteName%_log.html --output workspace/%JOB_NAME%/%TestSuiteName%_output.xml --report workspace/%JOB_NAME%/%TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+									robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
 								) ELSE (
-									robot %TestCaseRunFilter% --outputdir workspace/%JOB_NAME%%OutputDir% --log workspace/%JOB_NAME%/%TestSuiteName%_log.html --output workspace/%JOB_NAME%/%TestSuiteName%_output.xml --report workspace/%JOB_NAME%/%TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+									robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
 								)
 							)
 
