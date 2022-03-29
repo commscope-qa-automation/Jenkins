@@ -876,7 +876,7 @@ pipeline {
                     properties([
                         parameters([
                             choice(
-                                choices: ['windows', 'linux'], 
+                                choices: ['windows', 'linux', 'docker'], 
                                 name: 'OS'
                             ),
                             [
@@ -1091,9 +1091,13 @@ pipeline {
 	                    env.CUSTOMER = "_Test"
 	                }
 	                
-	                env.ACS = "ECOManage"
-            	            	
-                    if (TestSuiteName != "") {
+					if params.TestSuiteName.contains("ECOControl") {
+						env.ACS = "ECOControl"
+					} else {
+						env.ACS = "ECOManage"
+					}
+	                            	            	
+                    if (params.TestSuiteName != "") {
                     	if (params.OS == "windows") {
 	                        bat '''
 	                        IF EXIST %OutputDir% DEL /q %OutputDir%\\%TestSuiteName%_*.xml
@@ -1153,7 +1157,7 @@ pipeline {
 	post {
 		always {        
 			script {
-			   if (TestSuiteName != "") { 
+			   if (params.TestSuiteName != "") { 
 					/*
 					########################################################################
 					Start Robot Framework publish
