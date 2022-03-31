@@ -148,11 +148,17 @@ pipeline {
 	                    env.CUSTOMER = "_Ziply"
 	                } else if (env.JOB_NAME.contains('Sasktel')) {
 	                    env.CUSTOMER = "_Sasktel"
+	                } else if (env.JOB_NAME.contains('Telstra')) {
+	                    env.CUSTOMER = "_Telstra"
 	                } else {
 	                    env.CUSTOMER = "_Test"
 	                }
 	                
-	                env.ACS = "ECOManage"
+					if (params.TestSuiteName.contains("ECOControl")) {
+						env.ACS = "ECOControl"
+					} else {
+						env.ACS = "ECOManage"
+					}
                 
                     println("Extract the input data")
                     def list = []
