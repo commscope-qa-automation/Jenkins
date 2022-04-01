@@ -92,8 +92,6 @@ pipeline {
                     def choiceTestSuite
                     def choiceTestCase
 
-					env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
-                    
                     if (env.JOB_NAME.contains('ATT')) {
                         choiceTestSuite = '''
                             return [
@@ -891,7 +889,7 @@ pipeline {
                             string(
                                 defaultValue: 'All_TestData', 
                                 name: 'TestDataFileName',
-                                description: 'Test data file name (no file extension .py). under ${LOCAL_WORKSPACE}/TestData_Custom',
+                                description: 'Test data file name (no file extension .py). under <WORKSPACE>/TestData_Custom',
                                 trim: true
                             ), 
                             [
@@ -1089,24 +1087,26 @@ pipeline {
 						env.ACS = "ECOManage"
 					}
 
+					env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
 					env.OutputDir = "Jenkins_Robot_Results"
 					env.TestDataDir = "TestData_Custom"
 
 					env.DOCKER_IMAGE = "robot-docker"
 					env.DOCKER_CONTAINER = "robot-docker-container"
-					env.DOCKER_REGISTRY = "10.73.41.79:5000"										
-															
-	                            	            	
-                    if (params.TestSuiteName != "") {
-                    	if (params.OS == "windows") {
-	                        bat '''
-							SETLOCAL ENABLEDELAYEDEXPANSION
-
-							if exist %LOCAL_WORKSPACE/TestData_Custom% ( 
-								echo Directory %LOCAL_WORKSPACE/TestData_Custom% exists 								
+					env.DOCKER_REGISTRY = "10.73.41.79:5000"																										                            	            	
+                    
+                    if (params.OS == "windows") {
+						bat '''
+							if exist %LOCAL_WORKSPACETestData_Custom% ( 
+								echo Directory %LOCAL_WORKSPACETestData_Custom% exists 								
 							) else ( 
-								xcopy %LOCAL_WORKSPACE%/workspace/ECOManageRobotProject/TestData_Custom %LOCAL_WORKSPACE%/TestData_Custom /E /I
+								echo Copy %LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom to %LOCAL_WORKSPACE%TestData_Custom
+								xcopy %LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom %LOCAL_WORKSPACE%TestData_Custom /E /I
 							)
+						'''
+	                	if (params.TestSuiteName != "") {
+					        bat '''
+							SETLOCAL ENABLEDELAYEDEXPANSION
 
 	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.xml
 	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.html
@@ -1189,8 +1189,18 @@ pipeline {
 
 							:eof
 	                        '''
-                    	}
-                    	else {
+						}
+                    }
+                    else {
+						sh '''
+							if [ -d "%LOCAL_WORKSPACE%TestData_Custom" ]; then
+								echo Directory %LOCAL_WORKSPACETestData_Custom% exists
+							else
+								echo Copy %LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom to %LOCAL_WORKSPACE%TestData_Custom
+								cp -r %LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom %LOCAL_WORKSPACE%TestData_Custom
+							fi							
+						'''
+						if (params.TestSuiteName != "") {
                     		sh '''
                     		if [ -d "${OutputDir}" ] 
                     		then
