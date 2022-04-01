@@ -1094,7 +1094,7 @@ pipeline {
 					env.TestDataDir = "TestData_Custom"
 										
 					env.DOCKER_REGISTRY = "10.73.41.79:5000"
-					env.DOCKER_IMAGE = env.DOCKER_REGISTRY"/robot-docker"	
+					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
 					env.DOCKER_CONTAINER = "robot-docker-container"																								                            	            	
                     
@@ -1300,7 +1300,7 @@ pipeline {
 					step(
 						[
 						  $class                    : 'RobotPublisher',
-						  outputPath                : '${env.OutputDir}',
+						  outputPath                : 'Jenkins_Robot_Results',
 						  outputFileName            : "${TestSuiteName}_output.xml",
 						  reportFileName            : "${TestSuiteName}_report.html",
 						  logFileName               : "${TestSuiteName}_log.html",
