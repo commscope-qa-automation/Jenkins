@@ -1221,7 +1221,7 @@ pipeline {
 							echo --------------------------------------------
 							echo Check if the docker container robot-docker is running
 							echo --------------------------------------------
-							if [[ "$( docker container inspect -f '{{.State.Status}}' $DOCKER_CONTAINER )" == "running" ]]
+							if [[ "$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )" == "running" ]]
 							then
 								echo --------------------------------------------
 								echo The docker container robot-docker is running
@@ -1300,7 +1300,7 @@ pipeline {
 					step(
 						[
 						  $class                    : 'RobotPublisher',
-						  outputPath                : '${OutputDir}',
+						  outputPath                : '${env.OutputDir}',
 						  outputFileName            : "${TestSuiteName}_output.xml",
 						  reportFileName            : "${TestSuiteName}_report.html",
 						  logFileName               : "${TestSuiteName}_log.html",
