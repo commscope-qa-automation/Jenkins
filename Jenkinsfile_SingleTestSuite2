@@ -1101,7 +1101,8 @@ pipeline {
 
 					env.DOCKER_IMAGE = "robot-docker"
 					env.DOCKER_CONTAINER = "robot-docker-container"
-					env.DOCKER_REGISTRY = "10.73.41.79:5000"
+					env.DOCKER_REGISTRY = "10.73.41.79:5000"										
+					env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]										
 	                            	            	
                     if (params.TestSuiteName != "") {
                     	if (params.OS == "windows") {
@@ -1165,9 +1166,7 @@ pipeline {
 									echo --------------------------------------------
 									echo Start running docker container %DOCKER_CONTAINER%
 									echo --------------------------------------------
-									cd ../../
-									for /f %%a in ('echo !CD!') do set local_workspace=%%a
-									docker run --name %DOCKER_CONTAINER% -v !local_workspace!:/usr/src -d -t !image!	
+									docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t !image!	
 									goto exeTCInDocker
 								)
 							)
