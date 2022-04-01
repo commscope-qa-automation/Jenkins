@@ -1166,7 +1166,7 @@ pipeline {
 									echo Start running docker container %DOCKER_CONTAINER%
 									echo --------------------------------------------
 									cd ../../
-									for /f %%a in ('echo %CD%') do set local_workspace=%%a
+									for /f %%a in ('echo !CD!') do set local_workspace=%%a
 									docker run --name %DOCKER_CONTAINER% -v !local_workspace!:/usr/src -d -t !image!	
 									goto exeTCInDocker
 								)
