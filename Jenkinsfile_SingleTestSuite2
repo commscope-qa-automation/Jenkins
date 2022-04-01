@@ -1097,11 +1097,11 @@ pipeline {
                     
                     if (params.OS == "windows") {
 						bat '''
-							if exist %LOCAL_WORKSPACETestData_Custom% ( 
+							if exist "%LOCAL_WORKSPACETestData_Custom%" ( 
 								echo Directory %LOCAL_WORKSPACETestData_Custom% exists 								
 							) else ( 
 								echo Copy %LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom to %LOCAL_WORKSPACE%TestData_Custom
-								xcopy %LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom %LOCAL_WORKSPACE%TestData_Custom /E /I
+								xcopy "%LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom" "%LOCAL_WORKSPACE%TestData_Custom" /E /I
 							)
 						'''
 	                	if (params.TestSuiteName != "") {
@@ -1197,7 +1197,7 @@ pipeline {
 								echo Directory %LOCAL_WORKSPACETestData_Custom% exists
 							else
 								echo Copy %LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom to %LOCAL_WORKSPACE%TestData_Custom
-								cp -r %LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom %LOCAL_WORKSPACE%TestData_Custom
+								cp -r "%LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom" "%LOCAL_WORKSPACE%TestData_Custom"
 							fi							
 						'''
 						if (params.TestSuiteName != "") {
