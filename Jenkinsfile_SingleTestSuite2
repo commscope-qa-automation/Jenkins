@@ -1098,6 +1098,11 @@ pipeline {
 					} else {
 						env.ACS = "ECOManage"
 					}
+
+					env.DOCKER_IMAGE = "robot-docker"
+					env.DOCKER_CONTAINER = "robot-docker-container"
+					env.DOCKER_REGISTRY = "10.73.41.79:5000"
+					env.LOCAL_WORKSPACE = "%WORKSPACE%/../../"
 	                            	            	
                     if (params.TestSuiteName != "") {
                     	if (params.OS == "windows") {
@@ -1110,18 +1115,13 @@ pipeline {
 	                        if exist %OutputDir%\\Output for /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") do @if exist "%%d" rd /s /q "%%d"
 	                        
 	                        if "%TestCaseRunFilter1%" == "" (set "TestCaseRunFilter=%TestCaseRunFilter2%") else (set "TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %")
-	                        
-							set "image_name=robot-docker"
-							set "container_name=robot-docker-container"
-							set "registry=10.73.41.79:5000"
-							set "local_workspace=%WORKSPACE%/../../"
 
 							echo --------------------------------------------
 							echo Check if the docker container robot-docker is running
 							echo --------------------------------------------
 							set "containter_status="
-							for /f %%i in ('docker inspect -f '{{.State.Status}}' %container_name%') do set containter_status=%%i
-							if "%containter_status%" == "'running'" (
+							for /f %%i in ('docker inspect -f '{{.State.Status}}' %DOCKER_CONTAINER%') do set containter_status=%%i
+							if "!containter_status!" == "'running'" (
 								echo --------------------------------------------
 								echo The docker container robot-docker is running
 								echo Start Robot Framework automation in docker container	
@@ -1129,13 +1129,13 @@ pipeline {
 								goto exeTCInDocker
 							) else (
 								echo --------------------------------------------
-								echo The docker container %container_name% is not running
+								echo The docker container %DOCKER_CONTAINER% is not running
 								echo Check if docker is installed
 								echo --------------------------------------------
 								set "docker_installed="
 								for /f %%j in ('docker version ^| findstr Server') do set docker_installed=%%j
 	
-								if "%docker_installed%" == "" (
+								if "!docker_installed!" == "" (
 									echo --------------------------------------------
 									echo Docker is not installed
 									echo Start Robot Framework automation without docker container
@@ -1143,30 +1143,30 @@ pipeline {
 									goto exeTC	
 								) else (
 									set "image="
-									for /f %%m in ('docker image ls^|findstr %image_name%') do set image=%%m
+									for /f %%m in ('docker image ls^|findstr %DOCKER_IMAGE%') do set image=%%m
 
 									echo --------------------------------------------
 									echo Check if docker image exists
 									echo --------------------------------------------		
-									if "%image%" == "" (
+									if "!image!" == "" (
 										echo --------------------------------------------
-										echo The docker image %image_name% does not exist
+										echo The docker image %DOCKER_IMAGE% does not exist
 										echo Pull docker image from registry
 										echo --------------------------------------------
-										docker pull %registry%/%image_name%
+										docker pull %DOCKER_REGISTRY%/%image_name%
 									)
 									echo --------------------------------------------
-									echo Start docker container from image %image_name%
+									echo Start docker container from image %DOCKER_IMAGE%
 									echo --------------------------------------------
-									for /f "TOKENS=1* DELIMS= " %%j in ("%image%") do set image=%%j
+									for /f "TOKENS=1* DELIMS= " %%j in ("!image!") do set image=%%j
 									echo --------------------------------------------
-									echo Remove existing %container_name% container if any
+									echo Remove existing %DOCKER_CONTAINER% container if any
 									echo --------------------------------------------
 									docker rm -f robot-docker
 									echo --------------------------------------------
-									echo Start running docker container %container_name%
+									echo Start running docker container %DOCKER_CONTAINER%
 									echo --------------------------------------------
-									docker run --name %container_name% -v %local_workspace%:/usr/src -d -t %image%	
+									docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t !image!	
 									goto exeTCInDocker
 								)
 							)
