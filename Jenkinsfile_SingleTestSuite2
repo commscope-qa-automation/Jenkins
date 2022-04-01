@@ -882,16 +882,10 @@ pipeline {
                             [
                                 $class: 'ParameterSeparatorDefinition',
                                 name: 'DIR_HEADER',
-                                sectionHeader: 'Input OutputDir, TestDataDir, TestDataFileName',
+                                sectionHeader: 'Input TestDataDir, TestDataFileName',
                                 separatorStyle: separatorStyle,
                                 sectionHeaderStyle: sectionHeaderStyle
                             ],
-                            string(
-                                defaultValue: 'Jenkins_Robot_Results', 
-                                name: 'OutputDir',
-                                description: 'Relative directory to the workspace. The directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
-                                trim: true
-                            ),
                             string(
                                 defaultValue: 'TestData_Custom', 
                                 name: 'TestDataDir',
@@ -1099,6 +1093,8 @@ pipeline {
 						env.ACS = "ECOManage"
 					}
 
+					env.OutputDir = "Jenkins_Robot_Results"
+
 					env.DOCKER_IMAGE = "robot-docker"
 					env.DOCKER_CONTAINER = "robot-docker-container"
 					env.DOCKER_REGISTRY = "10.73.41.79:5000"										
@@ -1124,7 +1120,6 @@ pipeline {
 							if "!containter_status!" == "'running'" (
 								echo --------------------------------------------
 								echo The docker container robot-docker is running
-								echo Start Robot Framework automation in docker container	
 								echo --------------------------------------------
 								goto exeTCInDocker
 							) else (
@@ -1282,7 +1277,7 @@ pipeline {
 					def cycle = params.ProjectCycle
 					def folder = params.ProjectFolder
 					
-					def robotResultPath = params.OutputDir
+					def robotResultPath = env.OutputDir
 					def testsuiteName= params.TestSuiteName
 					
 					def workspace = env.WORKSPACE
