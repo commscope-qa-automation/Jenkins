@@ -1087,6 +1087,8 @@ pipeline {
 	                    env.CUSTOMER = "_Ziply"
 	                } else if (env.JOB_NAME.contains('Sasktel')) {
 	                    env.CUSTOMER = "_Sasktel"
+	                } else if (env.JOB_NAME.contains('Telstra')) {
+	                    env.CUSTOMER = "_Telstra"
 	                } else {
 	                    env.CUSTOMER = "_Test"
 	                }
@@ -1100,6 +1102,8 @@ pipeline {
                     if (params.TestSuiteName != "") {
                     	if (params.OS == "windows") {
 	                        bat '''
+							SETLOCAL ENABLEDELAYEDEXPANSION
+
 	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.xml
 	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.html
 	                        if exist %OutputDir%\\Screenshots del /q %OutputDir%\\Screenshots\\*%TestSuiteName%*.png
@@ -1107,24 +1111,85 @@ pipeline {
 	                        
 	                        if "%TestCaseRunFilter1%" == "" (set "TestCaseRunFilter=%TestCaseRunFilter2%") else (set "TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %")
 	                        
-							echo Check if robot-docker is running
-							for /f %%i in ('docker inspect -f '{{.State.Running}}' robot-docker') do set status=%%i
-							if "%status%" == "'true'" (
-								echo start Robot Framework automation in docker container
-								if "%TestDataFileName%" == "" (
-									docker exec robot-docker robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "workspace/%JOB_NAME%/%OutputDir%" --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
-								) else (
-									docker exec robot-docker robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "workspace/%JOB_NAME%/%OutputDir%" --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
-								)								
+							set "image_name=robot-docker"
+							set "container_name=robot-docker-container"
+							set "registry=10.73.41.79:5000"
+							set "local_workspace=%WORKSPACE%/../../"
 
+							echo --------------------------------------------
+							echo Check if the docker container robot-docker is running
+							echo --------------------------------------------
+							set "containter_status="
+							for /f %%i in ('docker inspect -f '{{.State.Status}}' %container_name%') do set containter_status=%%i
+							if "%containter_status%" == "'running'" (
+								echo --------------------------------------------
+								echo The docker container robot-docker is running
+								echo Start Robot Framework automation in docker container	
+								echo --------------------------------------------
+								goto exeTCInDocker
 							) else (
-								echo Start Robot Framework automation
-								if "%TestDataFileName%" == "" (
-									robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+								echo --------------------------------------------
+								echo The docker container %container_name% is not running
+								echo Check if docker is installed
+								echo --------------------------------------------
+								set "docker_installed="
+								for /f %%j in ('docker version ^| findstr Server') do set docker_installed=%%j
+	
+								if "%docker_installed%" == "" (
+									echo --------------------------------------------
+									echo Docker is not installed
+									echo Start Robot Framework automation without docker container
+									echo --------------------------------------------
+									goto exeTC	
 								) else (
-									robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+									set "image="
+									for /f %%m in ('docker image ls^|findstr %image_name%') do set image=%%m
+
+									echo --------------------------------------------
+									echo Check if docker image exists
+									echo --------------------------------------------		
+									if "%image%" == "" (
+										echo --------------------------------------------
+										echo The docker image %image_name% does not exist
+										echo Pull docker image from registry
+										echo --------------------------------------------
+										docker pull %registry%/%image_name%
+									)
+									echo --------------------------------------------
+									echo Start docker container from image %image_name%
+									echo --------------------------------------------
+									for /f "TOKENS=1* DELIMS= " %%j in ("%image%") do set image=%%j
+									echo --------------------------------------------
+									echo Remove existing %container_name% container if any
+									echo --------------------------------------------
+									docker rm -f robot-docker
+									echo --------------------------------------------
+									echo Start running docker container %container_name%
+									echo --------------------------------------------
+									docker run --name %container_name% -v %local_workspace%:/usr/src -d -t %image%	
+									goto exeTCInDocker
 								)
 							)
+
+							:exeTCInDocker
+							echo Start Robot Framework automation in docker container
+							if "%TestDataFileName%" == "" (
+								docker exec robot-docker-container robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "workspace/%JOB_NAME%/%OutputDir%" --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+							) else (
+								docker exec robot-docker-container robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "workspace/%JOB_NAME%/%OutputDir%" --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+							)
+							goto :eof
+
+							:exeTC
+							echo Start Robot Framework automation
+							if "%TestDataFileName%" == "" (
+								robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+							) else (
+								robot %TestCaseRunFilter% --outputdir %OutputDir% --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+							)
+							goto :eof
+
+							:eof
 	                        '''
                     	}
                     	else {
@@ -1151,9 +1216,9 @@ pipeline {
 							fi								
                     		
 							echo Check if robot-docker is running
-							if [ $(docker inspect -f '{{.State.Running}}' $container_name) = "'true'" ]
+							if [ $(docker inspect -f '{{.State.Running}}' robot-docker) = "'true'" ]
 							then
-								echo start Robot Framework automation in docker container
+								echo Start Robot Framework automation in docker container
 								if [ "${TestDataFileName}" == "" ] 
 								then
 									docker exec -it robot-docker robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
