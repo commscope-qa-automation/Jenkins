@@ -91,6 +91,8 @@ pipeline {
                 script {
                     def choiceTestSuite
                     def choiceTestCase
+
+					env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
                     
                     if (env.JOB_NAME.contains('ATT')) {
                         choiceTestSuite = '''
@@ -882,20 +884,14 @@ pipeline {
                             [
                                 $class: 'ParameterSeparatorDefinition',
                                 name: 'DIR_HEADER',
-                                sectionHeader: 'Input TestDataDir, TestDataFileName',
+                                sectionHeader: 'Input TestDataFileName',
                                 separatorStyle: separatorStyle,
                                 sectionHeaderStyle: sectionHeaderStyle
                             ],
                             string(
-                                defaultValue: 'TestData_Custom', 
-                                name: 'TestDataDir',
-                                description: 'Relative directory to the workspace. The directory contains test data files.',
-                                trim: true
-                            ),
-                            string(
                                 defaultValue: 'All_TestData', 
                                 name: 'TestDataFileName',
-                                description: 'Test data file name.',
+                                description: 'Test data file name (no file extension .py). under ${LOCAL_WORKSPACE}/TestData_Custom',
                                 trim: true
                             ), 
                             [
@@ -1094,16 +1090,23 @@ pipeline {
 					}
 
 					env.OutputDir = "Jenkins_Robot_Results"
+					env.TestDataDir = "TestData_Custom"
 
 					env.DOCKER_IMAGE = "robot-docker"
 					env.DOCKER_CONTAINER = "robot-docker-container"
 					env.DOCKER_REGISTRY = "10.73.41.79:5000"										
-					env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]										
+															
 	                            	            	
                     if (params.TestSuiteName != "") {
                     	if (params.OS == "windows") {
 	                        bat '''
 							SETLOCAL ENABLEDELAYEDEXPANSION
+
+							if exist %LOCAL_WORKSPACE/TestData_Custom% ( 
+								echo Directory %LOCAL_WORKSPACE/TestData_Custom% exists 								
+							) else ( 
+								xcopy %LOCAL_WORKSPACE%/workspace/ECOManageRobotProject/TestData_Custom %LOCAL_WORKSPACE%/TestData_Custom /E /I
+							)
 
 	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.xml
 	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.html
