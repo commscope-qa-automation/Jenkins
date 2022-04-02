@@ -1208,9 +1208,9 @@ pipeline {
 								echo Start Robot Framework automation in docker container
 								if [ -z "${TestDataFileName}" ] 
 								then
-									docker exec -it ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
+									docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
 								else
-									docker exec -it ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
+									docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
 								fi
 							}
 
