@@ -1241,7 +1241,7 @@ pipeline {
 							echo --------------------------------------------
 							echo Check if the docker container robot-docker is running
 							echo --------------------------------------------
-							if [[ "$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )" == "running" ]]
+							if [ "$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )" = "running" ]
 							then
 								echo --------------------------------------------
 								echo The docker container robot-docker is running
@@ -1264,7 +1264,7 @@ pipeline {
 									echo --------------------------------------------
 									echo Check if docker image exists
 									echo --------------------------------------------		 
-									if [[ "$( docker image ls )" != *"$DOCKER_IMAGE"* ]]
+									if [ -z "$( docker image ls | grep ${DOCKER_IMAGE} )" ]
 									then
 										echo --------------------------------------------
 										echo The docker image ${DOCKER_IMAGE} does not exist
