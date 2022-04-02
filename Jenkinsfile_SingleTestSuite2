@@ -1210,8 +1210,8 @@ pipeline {
                     				rm -f "${OutputDir}/Output/*${TestSuiteName}*"
                     			fi
                     		fi                    		
-                    		
-                    		if [[ "${TestCaseRunFilter1}" == "" ]]
+
+							if [ -z "${TestCaseRunFilter1}" ]
 							then 
 								TestCaseRunFilter=${TestCaseRunFilter2} 
 							else 
@@ -1233,7 +1233,7 @@ pipeline {
 								echo The docker container ${DOCKER_CONTAINER} is not running
 								echo Check if docker is installed
 								echo --------------------------------------------
-								if [[ "$( docker version )" == "" ]]
+								if [ -z "$( docker version )" ]
 								then
 									echo --------------------------------------------
 									echo Docker is not installed
@@ -1262,7 +1262,7 @@ pipeline {
 
 							exeTCInDocker () {
 								echo Start Robot Framework automation in docker container
-								if [[ "${TestDataFileName}" == "" ]] 
+								if [ -z "${TestDataFileName}" ] 
 								then
 									docker exec -it robot-docker robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
 								else
@@ -1272,7 +1272,7 @@ pipeline {
 
 							exeTC () {
 								echo Start Robot Framework automation
-								if [[ "${TestDataFileName}" == "" ]] 
+								if [ -z "${TestDataFileName}" ] 
 								then
 									robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
 								else
