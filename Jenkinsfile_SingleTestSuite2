@@ -1107,7 +1107,26 @@ pipeline {
 								xcopy "%LOCAL_WORKSPACE%workspace/ECOManageRobotProject/TestData_Custom" "%LOCAL_WORKSPACE%TestData_Custom" /E /I
 							)
 						'''
-	                	if (params.TestSuiteName != "") {
+					}
+					else {
+						sh '''
+							if [ -d "${LOCAL_WORKSPACE}TestData_Custom" ]; then
+								echo TestData directory ${LOCAL_WORKSPACE}TestData_Custom exists
+							else
+								echo Copy ${LOCAL_WORKSPACE}workspace/ECOManageRobotProject/TestData_Custom to ${LOCAL_WORKSPACE}TestData_Custom
+								cp -r "${LOCAL_WORKSPACE}workspace/ECOManageRobotProject/TestData_Custom" "${LOCAL_WORKSPACE}TestData_Custom"
+							fi							
+						'''
+					}
+	                
+					if (params.TestSuiteName != "") {
+						if (params.TestCaseRunFilter1 == "") {
+							env.TestCaseRunFilter = params.TestCaseRunFilter2
+						} else {
+							env.TestCaseRunFilter = params.TestCaseRunFilter1.split(",").collect { "-t " + it }.join(" ")
+						}
+
+						if (params.OS == "windows") {
 					        bat '''
 							SETLOCAL ENABLEDELAYEDEXPANSION
 
@@ -1116,8 +1135,6 @@ pipeline {
 	                        if exist %OutputDir%\\Screenshots del /q %OutputDir%\\Screenshots\\*%TestSuiteName%*.png
 	                        if exist %OutputDir%\\Output for /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") do @if exist "%%d" rd /s /q "%%d"
 	                        
-	                        if "%TestCaseRunFilter1%" == "" (set "TestCaseRunFilter=%TestCaseRunFilter2%") else (set "TestCaseRunFilter=-t %TestCaseRunFilter1:,= -t %")
-
 							echo --------------------------------------------
 							echo Check if the docker container robot-docker is running
 							echo --------------------------------------------
@@ -1185,18 +1202,28 @@ pipeline {
 							:eof
 	                        '''
 						}
-                    }
-                    else {
-						sh '''
-							if [ -d "${LOCAL_WORKSPACE}TestData_Custom" ]; then
-								echo TestData directory ${LOCAL_WORKSPACE}TestData_Custom exists
-							else
-								echo Copy ${LOCAL_WORKSPACE}workspace/ECOManageRobotProject/TestData_Custom to ${LOCAL_WORKSPACE}TestData_Custom
-								cp -r "${LOCAL_WORKSPACE}workspace/ECOManageRobotProject/TestData_Custom" "${LOCAL_WORKSPACE}TestData_Custom"
-							fi							
-						'''
-						if (params.TestSuiteName != "") {
+                    	else {
                     		sh '''
+							exeTCInDocker () {
+								echo Start Robot Framework automation in docker container
+								if [ -z "${TestDataFileName}" ] 
+								then
+									docker exec -it robot-docker robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
+								else
+									docker exec -it robot-docker robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
+								fi
+							}
+
+							exeTC () {
+								echo Start Robot Framework automation
+								if [ -z "${TestDataFileName}" ] 
+								then
+									robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
+								else
+									robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
+								fi
+							}
+
                     		if [ -d "${OutputDir}" ] 
                     		then
                     			rm -f "${OutputDir}/${TestSuiteName}_*.xml"
@@ -1209,14 +1236,7 @@ pipeline {
                     			then
                     				rm -f "${OutputDir}/Output/*${TestSuiteName}*"
                     			fi
-                    		fi                    		
-
-							if [ -z "${TestCaseRunFilter1}" ]
-							then 
-								TestCaseRunFilter=${TestCaseRunFilter2} 
-							else 
-								TestCaseRunFilter=$(echo -t ${TestCaseRunFilter1//,/ -t })	
-							fi								
+                    		fi                    										
                     		
 							echo --------------------------------------------
 							echo Check if the docker container robot-docker is running
@@ -1259,26 +1279,6 @@ pipeline {
 									exeTCInDocker
 								fi
 							fi
-
-							exeTCInDocker () {
-								echo Start Robot Framework automation in docker container
-								if [ -z "${TestDataFileName}" ] 
-								then
-									docker exec -it robot-docker robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
-								else
-									docker exec -it robot-docker robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
-								fi
-							}
-
-							exeTC () {
-								echo Start Robot Framework automation
-								if [ -z "${TestDataFileName}" ] 
-								then
-									robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
-								else
-									robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
-								fi
-							}
                     		'''
                     	}
                     }
