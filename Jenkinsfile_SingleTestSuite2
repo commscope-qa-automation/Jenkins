@@ -80,6 +80,9 @@ def getlabel(os) {
 	return label
 }
 
+def OutputDir = "Jenkins_Robot_Results"
+def TestDataDir = "TestData_Custom"
+
 pipeline {
     options {skipDefaultCheckout(true)}
 
@@ -1090,8 +1093,6 @@ pipeline {
 					}
 
 					env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
-					env.OutputDir = "Jenkins_Robot_Results"
-					env.TestDataDir = "TestData_Custom"
 										
 					env.DOCKER_REGISTRY = "qa.docker.registry:5000"
 					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
@@ -1300,7 +1301,7 @@ pipeline {
 					step(
 						[
 						  $class                    : 'RobotPublisher',
-						  outputPath                : 'Jenkins_Robot_Results',
+						  outputPath                : '${OutputDir}',
 						  outputFileName            : "${TestSuiteName}_output.xml",
 						  reportFileName            : "${TestSuiteName}_report.html",
 						  logFileName               : "${TestSuiteName}_log.html",
@@ -1326,7 +1327,7 @@ pipeline {
 					def cycle = params.ProjectCycle
 					def folder = params.ProjectFolder
 					
-					def robotResultPath = env.OutputDir
+					def robotResultPath = OutputDir
 					def testsuiteName= params.TestSuiteName
 					
 					def workspace = env.WORKSPACE
