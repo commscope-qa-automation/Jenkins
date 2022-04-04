@@ -80,9 +80,6 @@ def getlabel(os) {
 	return label
 }
 
-def OutputDir = "Jenkins_Robot_Results"
-def TestDataDir = "TestData_Custom"
-
 pipeline {
     options {skipDefaultCheckout(true)}
 
@@ -890,9 +887,21 @@ pipeline {
                                 sectionHeaderStyle: sectionHeaderStyle
                             ],
                             string(
+                                defaultValue: 'Jenkins_Robot_Results', 
+                                name: 'OutputDir',
+                                description: 'Relative directory to the workspace. The directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
+                                trim: true
+                            ),
+                            string(
+                                defaultValue: 'TestData_Custom', 
+                                name: 'TestDataDir',
+                                description: 'Relative directory to the workspace. The directory contains test data files.',
+                                trim: true
+                            ),							
+                            string(
                                 defaultValue: 'All_TestData', 
                                 name: 'TestDataFileName',
-                                description: 'Test data file name (no file extension .py). under <WORKSPACE>/TestData_Custom',
+                                description: 'Test data file name (no file extension .py). under <WORKSPACE>/<TestDataDir>',
                                 trim: true
                             ), 
                             [
@@ -1327,7 +1336,7 @@ pipeline {
 					def cycle = params.ProjectCycle
 					def folder = params.ProjectFolder
 					
-					def robotResultPath = OutputDir
+					def robotResultPath = params.OutputDir
 					def testsuiteName= params.TestSuiteName
 					
 					def workspace = env.WORKSPACE
