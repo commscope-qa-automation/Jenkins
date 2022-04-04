@@ -361,12 +361,12 @@ pipeline {
                     def cycle = projectList[i+1]  //params.ProjectCycle
                     def folder = projectList[i+2]  //params.ProjectFolder
                     
-                    //def testsuiteName= projectList[i+3]  //params.TestSuiteName
+                    def testsuiteName= projectList[i+3]
                     //def robotResultPath = params.OutputDir
                     
                     //def workspace = env.WORKSPACE
                     //def junitFile = workspace + "/" + robotResultPath + "/" + testsuiteName + "_" + cycle.replaceAll(" ", "") + "_junit.xml"
-                    def junitFile = env.WORKSPACE + "/" + params.OutputDir + "/" + params.TestSuiteName + "_junit.xml"
+                    def junitFile = env.WORKSPACE + "/" + params.OutputDir + "/" + testsuiteName + "_" + cycle.replaceAll(" ", "") + "_junit.xml"
                     //println("junit xml file: " + junitFile)
                     /*
                     ########################################################################
