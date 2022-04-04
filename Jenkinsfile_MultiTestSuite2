@@ -3,7 +3,7 @@ properties([
         choice(
             choices: ['windows', 'linux'], 
             name: 'OS'
-        ),    
+        ),  
         string(
             defaultValue: 'Jenkins_Robot_Results', 
             name: 'OutputDir',
@@ -15,7 +15,7 @@ properties([
             name: 'TestDataDir',
             description: 'Relative directory to the workspace. The directory contains test data files.',
             trim: true
-        ),       
+        ),                
         text(
             defaultValue: '''TestData: All_TestData_att76_52141N005018
 TestSuiteName: ECOManageGUI
@@ -111,7 +111,7 @@ def getlabel(os) {
 pipeline {
     options {skipDefaultCheckout(true)}
     
-    //agent any test
+    //agent any
     agent {label getlabel(params.OS)}
                    
     stages {
@@ -131,27 +131,115 @@ pipeline {
         stage ("Run scripts") {
             steps {
                 script {
-                    currentBuild.displayName = currentBuild.number + " " + LOGIN_USER
-                    
-                    if (params.OS == "windows") {
-                    	bat 'IF EXIST %OutputDir% RD /S /Q %OutputDir%'
-                    }
-                    else {
-                    	sh 'rm -f "${OutputDir}/*"'
-                    }
-                }
-                
-                script {
+					/*
+					########################################################################
+					Build history: #<Build Number> <Login User>
+					########################################################################
+					*/                     
+                    currentBuild.displayName = currentBuild.number + " " + LOGIN_USER                    
+
+					/*
+					########################################################################
+					Defined different environment variables for robot framework command line
+					########################################################################
+					*/ 
                 	if (env.JOB_NAME.contains('ATT')) {
-	                    env.CUSTOMER = "Manage"
+	                    env.CUSTOMER = "_ATT"
 	                } else if (env.JOB_NAME.contains('Ziply')) {
 	                    env.CUSTOMER = "_Ziply"
 	                } else if (env.JOB_NAME.contains('Sasktel')) {
 	                    env.CUSTOMER = "_Sasktel"
+	                } else if (env.JOB_NAME.contains('Telstra')) {
+	                    env.CUSTOMER = "_Telstra"
+	                } else if (env.JOB_NAME.contains('Rogers')) {
+	                    env.CUSTOMER = "_Rogers"
 	                } else {
 	                    env.CUSTOMER = "_Test"
 	                }
-                
+	                
+					if (params.TestSuiteName.contains("ECOControl")) {
+						env.ACS = "ECOControl"
+					} else {
+						env.ACS = "ECOManage"
+					}
+
+                    env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
+					env.DOCKER_REGISTRY = "qa.docker.registry:5000"
+					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
+					env.DOCKER_IMAGE_TAG = "1"	
+					env.DOCKER_CONTAINER = "robot-docker-container"	               
+
+					/*
+					########################################################################
+					Start checking docker container
+					########################################################################
+					*/  
+                    if (params.OS == "windows") {
+                        bat '''
+                            IF EXIST %OutputDir% RD /S /Q %OutputDir%
+
+							echo --------------------------------------------
+							echo Check if the docker container robot-docker is running
+							echo --------------------------------------------
+							set "containter_status="
+							for /f %%i in ('docker inspect -f '{{.State.Status}}' %DOCKER_CONTAINER%') do set containter_status=%%i
+							if "!containter_status!" == "'running'" (
+								echo --------------------------------------------
+								echo The docker container robot-docker is running
+								echo --------------------------------------------
+							) else (
+                                echo --------------------------------------------
+                                echo Check if docker image exists
+                                echo --------------------------------------------
+                                set "image="
+                                for /f %%m in ('docker image ls^|findstr %DOCKER_IMAGE%') do set image=%%m                                		
+                                if "!image!" == "" (
+                                    echo --------------------------------------------
+                                    echo The docker image %DOCKER_IMAGE% does not exist
+                                    echo Pull docker image %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
+                                    echo --------------------------------------------
+                                    docker pull %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
+                                )
+                                echo --------------------------------------------
+                                echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
+                                echo --------------------------------------------
+                                docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%	
+							)                        
+                        '''
+                    }
+                    else {
+                        sh '''
+                            rm -f "${OutputDir}/*"
+
+							echo --------------------------------------------
+							echo Check if the docker container robot-docker is running
+							echo --------------------------------------------
+							if [ "$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )" = "running" ]
+							then
+								echo --------------------------------------------
+								echo The docker container robot-docker is running
+								echo Start Robot Framework automation in docker container	
+								echo --------------------------------------------
+							else
+                                echo --------------------------------------------
+                                echo Check if docker image exists
+                                echo --------------------------------------------		 
+                                if [ -z "$( docker image ls | grep ${DOCKER_IMAGE} )" ]
+                                then
+                                    echo --------------------------------------------
+                                    echo The docker image ${DOCKER_IMAGE} does not exist
+                                    echo Pull docker image ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
+                                    echo --------------------------------------------
+                                    docker pull ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
+                                fi
+                                echo --------------------------------------------
+                                echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
+                                echo --------------------------------------------
+                                docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}	
+							fi                            
+                        '''
+                    }  
+
                     println("Extract the input data")
                     def list = []
                     def counter = 1
@@ -187,10 +275,14 @@ pipeline {
                             stage(env.TestSuiteName + "-" + env.ProjectCycle) {
                                 catchError(stageResult: 'FAILURE') {
                                     if (params.OS == "windows") {
-				                    	bat 'robot %TestCaseRunFilter% --outputdir %OutputDir% --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile ../../%TestDataDir%/%TestDataFileName%.py ../ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%TestSuiteName%.robot'
+				                    	bat '''
+                                        docker exec %DOCKER_CONTAINER% robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "workspace/%JOB_NAME%/%OutputDir%" --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+                                        '''
 				                    }
 				                    else {
-				                    	sh 'robot ${TestCaseRunFilter} --outputdir ${OutputDir} --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ../../${TestDataDir}/${TestDataFileName}.py ../ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${TestSuiteName}.robot'
+				                    	sh '''
+                                        docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_{ACS}/TestSuite_${TestSuiteName}.robot
+                                        '''
 				                    }     
                                 }
                             }
@@ -217,10 +309,10 @@ pipeline {
                 
                 script {
 	                if (params.OS == "windows") {
-	                	bat 'rebot --processemptysuite --outputdir %OutputDir% --output Final_output.xml --report Final_report.html --xunit Final_junit.xml %OutputDir%/*_output.xml'
+	                	bat 'rebot --processemptysuite --outputdir "workspace/%JOB_NAME%/%OutputDir%" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml %OutputDir%/*_output.xml'
 	                }
 	                else {
-	                	sh 'rebot --processemptysuite --outputdir ${OutputDir} --output Final_output.xml --report Final_report.html --xunit Final_junit.xml ${OutputDir}/*_output.xml'
+	                	sh 'rebot --processemptysuite --outputdir "workspace/${JOB_NAME}/${OutputDir}" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml ${OutputDir}/*_output.xml'
 	                }
                 }
             }
@@ -230,7 +322,12 @@ pipeline {
     post {
         always {
             script {
-                step(
+                /*
+                ########################################################################
+                Start Robot Framework publish
+                ########################################################################
+                */                  
+                step(                    
                     [
                       $class                    : 'RobotPublisher',
                       outputPath                : '${OutputDir}',
@@ -246,6 +343,11 @@ pipeline {
             }
 
             script {
+                /*
+                ########################################################################
+                Start Etrack
+                ########################################################################
+                */                
                 def cycleDict = [:]
                 def projectId = ""
                 def versionId = ""
@@ -259,11 +361,12 @@ pipeline {
                     def cycle = projectList[i+1]  //params.ProjectCycle
                     def folder = projectList[i+2]  //params.ProjectFolder
                     
-                    def testsuiteName= projectList[i+3]  //params.TestSuiteName
-                    def robotResultPath = OutputDir
+                    //def testsuiteName= projectList[i+3]  //params.TestSuiteName
+                    //def robotResultPath = params.OutputDir
                     
-                    def workspace = env.WORKSPACE
-                    def junitFile = workspace + "/" + robotResultPath + "/" + testsuiteName + "_" + cycle.replaceAll(" ", "") + "_junit.xml"
+                    //def workspace = env.WORKSPACE
+                    //def junitFile = workspace + "/" + robotResultPath + "/" + testsuiteName + "_" + cycle.replaceAll(" ", "") + "_junit.xml"
+                    def junitFile = env.WORKSPACE + "/" + params.OutputDir + "/" + params.TestSuiteName + "_junit.xml"
                     //println("junit xml file: " + junitFile)
                     /*
                     ########################################################################
@@ -328,7 +431,6 @@ pipeline {
                         //println("versionId = " + versionId)                        
                     }
                     
-
                     if (cycleDict.size() == 0) {
                         (code, content) = sendGetRequest(jiraBaseURL+"/rest/zapi/latest/cycle?projectId="+projectId+"&versionId="+versionId, username, password)
                         assert code == 200
@@ -343,8 +445,7 @@ pipeline {
                     
                     //println("cycleId = " + cycleId)
                     	
-                    // Get Folder ID
-                    
+                    // Get Folder ID                    
                     (code, content) = sendGetRequest(jiraBaseURL+"/rest/zapi/latest/cycle/"+cycleId+"/folders?projectId="+projectId+"&versionId="+versionId, username, password)
                     assert code == 200
                     jsonResponse = parseJson(content)
@@ -387,7 +488,12 @@ pipeline {
                     }
                 }
             }
-            
+
+            /*
+            ########################################################################
+            Start Email notification
+            ########################################################################
+            */              
             emailext body: '''<html>
 				  <head>
 					<title>Robot Framework Automation Result</title>
