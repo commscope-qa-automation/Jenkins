@@ -309,10 +309,10 @@ pipeline {
                 
                 script {
 	                if (params.OS == "windows") {
-	                	bat 'rebot --processemptysuite --outputdir "workspace/%JOB_NAME%/%OutputDir%" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml %OutputDir%/*_output.xml'
+	                	bat 'docker exec %DOCKER_CONTAINER% rebot --processemptysuite --outputdir "workspace/%JOB_NAME%/%OutputDir%" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml %OutputDir%/*_output.xml'
 	                }
 	                else {
-	                	sh 'rebot --processemptysuite --outputdir "workspace/${JOB_NAME}/${OutputDir}" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml ${OutputDir}/*_output.xml'
+	                	sh 'docker exec ${DOCKER_CONTAINER} rebot --processemptysuite --outputdir "workspace/${JOB_NAME}/${OutputDir}" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml ${OutputDir}/*_output.xml'
 	                }
                 }
             }
