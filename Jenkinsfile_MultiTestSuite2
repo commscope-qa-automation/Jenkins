@@ -7,13 +7,13 @@ properties([
         string(
             defaultValue: 'Jenkins_Robot_Results', 
             name: 'OutputDir',
-            description: 'Relative directory to the workspace. The directory contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
+            description: 'The directory <WORKSPACE>/workspace/<job name>/<OutputDir> contains the Robot Framework output files: log.html, report.html, output.xml, xunit.xml.',
             trim: true
         ),
         string(
             defaultValue: 'TestData_Custom', 
             name: 'TestDataDir',
-            description: 'Relative directory to the workspace. The directory contains test data files.',
+            description: 'The directory <WORKSPACE>/<TestDataDir> contains test data files.',
             trim: true
         ),                
         text(
@@ -157,12 +157,6 @@ pipeline {
 	                    env.CUSTOMER = "_Test"
 	                }
 	                
-					if (params.TestSuiteName.contains("ECOControl")) {
-						env.ACS = "ECOControl"
-					} else {
-						env.ACS = "ECOManage"
-					}
-
                     env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
 					env.DOCKER_REGISTRY = "qa.docker.registry:5000"
 					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
@@ -255,7 +249,13 @@ pipeline {
                             env.ProjectCycle = list[4]
                             env.ProjectFolder = list[5]
                             env.Prefix = env.TestSuiteName + "_" + env.ProjectCycle.replaceAll(" ", "")
-                            
+
+                            if (env.TestSuiteName.contains("ECOControl")) {
+                                env.ACS = "ECOControl"
+                            } else {
+                                env.ACS = "ECOManage"
+                            } 
+
                             projectList.add(env.ProjectVersion)
                             projectList.add(env.ProjectCycle)
                             projectList.add(env.ProjectFolder)
@@ -270,7 +270,7 @@ pipeline {
                             }
                             
                             env.counter = counter
-                            
+    
                             echo "Create stage: ${env.TestSuiteName} - ${env.ProjectCycle}"
                             stage(env.TestSuiteName + "-" + env.ProjectCycle) {
                                 catchError(stageResult: 'FAILURE') {
