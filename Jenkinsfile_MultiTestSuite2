@@ -158,7 +158,7 @@ pipeline {
 	                }
 	                
                     env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
-					env.DOCKER_REGISTRY = "qa.docker.registry:5000"
+					env.DOCKER_REGISTRY = "docker-registry.qa.ps.arris.com:5000"
 					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
 					env.DOCKER_CONTAINER = "robot-docker-container"	               
@@ -177,7 +177,7 @@ pipeline {
 							echo --------------------------------------------
 							set "containter_status="
 							for /f %%i in ('docker inspect -f '{{.State.Status}}' %DOCKER_CONTAINER%') do set containter_status=%%i
-							if "!containter_status!" == "'running'" (
+							if "!containter_status!" == "'running'" (                             
 								echo --------------------------------------------
 								echo The docker container robot-docker is running
 								echo --------------------------------------------
