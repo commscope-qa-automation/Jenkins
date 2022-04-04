@@ -281,7 +281,7 @@ pipeline {
 				                    }
 				                    else {
 				                    	sh '''
-                                        docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_{ACS}/TestSuite_${TestSuiteName}.robot
+                                        docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
                                         '''
 				                    }     
                                 }
