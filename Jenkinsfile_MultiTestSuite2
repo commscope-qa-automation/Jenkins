@@ -215,7 +215,7 @@ pipeline {
 								echo --------------------------------------------
 								echo The docker container robot-docker is running
 								echo --------------------------------------------
-                                docker exec ${DOCKER_CONTAINER}
+                                
 							else
                                 echo --------------------------------------------
                                 echo Check if docker image exists
