@@ -174,18 +174,18 @@ pipeline {
                             IF EXIST %OutputDir% RD /S /Q %OutputDir%
 
 							echo --------------------------------------------
-							echo Check if the docker container robot-docker is running
+							echo Check if the docker container %DOCKER_CONTAINER% is running
 							echo --------------------------------------------
 							set "containter_status="
 							for /f %%i in ('docker inspect -f '{{.State.Status}}' %DOCKER_CONTAINER%') do set containter_status=%%i
 							if "!containter_status!" == "'running'" (                             
 								echo --------------------------------------------
-								echo The docker container robot-docker is running
+								echo The docker container %DOCKER_CONTAINER% is running
 								echo --------------------------------------------
                                 docker exec %DOCKER_CONTAINER% sh -c "rm -r -f %RESULT_DIR%"
 							) else (
                                 echo --------------------------------------------
-                                echo Check if docker image exists
+                                echo Check if docker image %DOCKER_IMAGE% exists
                                 echo --------------------------------------------
                                 set "image="
                                 for /f %%m in ('docker image ls^|findstr %DOCKER_IMAGE%') do set image=%%m                                		
@@ -208,17 +208,17 @@ pipeline {
                             rm -f "${OutputDir}/*"
 
 							echo --------------------------------------------
-							echo Check if the docker container robot-docker is running
+							echo Check if the docker container ${DOCKER_CONTAINER} is running
 							echo --------------------------------------------
 							if [ "$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )" = "running" ]
 							then
 								echo --------------------------------------------
-								echo The docker container robot-docker is running
+								echo The docker container ${DOCKER_CONTAINER} is running
 								echo --------------------------------------------
-                                docker exec %DOCKER_CONTAINER% sh -c "rm -r -f ${RESULT_DIR}"
+                                docker exec ${DOCKER_CONTAINER} sh -c "rm -r -f ${RESULT_DIR}"
 							else
                                 echo --------------------------------------------
-                                echo Check if docker image exists
+                                echo Check if docker image ${DOCKER_IMAGE} exists
                                 echo --------------------------------------------		 
                                 if [ -z "$( docker image ls | grep ${DOCKER_IMAGE} )" ]
                                 then
