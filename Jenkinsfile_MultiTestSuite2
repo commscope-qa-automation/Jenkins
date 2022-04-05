@@ -161,7 +161,8 @@ pipeline {
 					env.DOCKER_REGISTRY = "docker-registry.qa.ps.arris.com:5000"
 					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
-					env.DOCKER_CONTAINER = "robot-docker-container"	               
+					env.DOCKER_CONTAINER = "robot-docker-container"	    
+                    env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir + "/*"           
 
 					/*
 					########################################################################
@@ -181,7 +182,7 @@ pipeline {
 								echo --------------------------------------------
 								echo The docker container robot-docker is running
 								echo --------------------------------------------
-                                docker exec %DOCKER_CONTAINER% sh -c "rm -f '"workspace/${JOB_NAME}/${OutputDir}/*"'
+                                docker exec %DOCKER_CONTAINER% sh -c "rm -f %RESULT_DIR%"
 							) else (
                                 echo --------------------------------------------
                                 echo Check if docker image exists
@@ -198,7 +199,7 @@ pipeline {
                                 echo --------------------------------------------
                                 echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
                                 echo --------------------------------------------
-                                docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG% sh -c 'rm -f "workspace/${JOB_NAME}/${OutputDir}/*"'	
+                                docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG% sh -c "rm -f %RESULT_DIR%"	
 							)                        
                         '''
                     }
@@ -214,7 +215,7 @@ pipeline {
 								echo --------------------------------------------
 								echo The docker container robot-docker is running
 								echo --------------------------------------------
-                                docker exec ${DOCKER_CONTAINER} sh -c 'rm -f "workspace/${JOB_NAME}/${OutputDir}/*"'
+                                docker exec ${DOCKER_CONTAINER} sh -c "rm -f ${RESULT_DIR}"
 							else
                                 echo --------------------------------------------
                                 echo Check if docker image exists
@@ -230,7 +231,7 @@ pipeline {
                                 echo --------------------------------------------
                                 echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
                                 echo --------------------------------------------
-                                docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG} sh -c 'rm -f "workspace/${JOB_NAME}/${OutputDir}/*"' 	
+                                docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG} sh -c "rm -f ${RESULT_DIR}" 	
 							fi                            
                         '''
                     }  
