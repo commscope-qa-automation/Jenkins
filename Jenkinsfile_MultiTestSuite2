@@ -172,7 +172,7 @@ pipeline {
                     if (params.OS == "windows") {
                         bat '''
                             SETLOCAL ENABLEDELAYEDEXPANSION
-                            
+
                             IF EXIST %OutputDir% RD /S /Q %OutputDir%
 
 							echo --------------------------------------------
@@ -194,7 +194,8 @@ pipeline {
                     }
                     else {
                         sh '''
-                            rm -f "${OutputDir}/*"
+                            pwd
+                            rm -r -f "${OutputDir}"
 
 							echo --------------------------------------------
 							echo Check if the docker container ${DOCKER_CONTAINER} is running
