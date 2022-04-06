@@ -162,7 +162,7 @@ pipeline {
 					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
 					env.DOCKER_CONTAINER = "robot-docker-container"	    
-                    env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir + "/*"           
+                    env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir           
 
 					/*
 					########################################################################
@@ -182,24 +182,11 @@ pipeline {
 								echo --------------------------------------------
 								echo The docker container %DOCKER_CONTAINER% is running
 								echo --------------------------------------------
-                                docker exec %DOCKER_CONTAINER% sh -c "rm -r -f %RESULT_DIR%"
 							) else (
-                                echo --------------------------------------------
-                                echo Check if docker image %DOCKER_IMAGE% exists
-                                echo --------------------------------------------
-                                set "image="
-                                for /f %%m in ('docker image ls^|findstr %DOCKER_IMAGE%') do set image=%%m                                		
-                                if "!image!" == "" (
-                                    echo --------------------------------------------
-                                    echo The docker image %DOCKER_IMAGE% does not exist
-                                    echo Pull docker image %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
-                                    echo --------------------------------------------
-                                    docker pull %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
-                                )
                                 echo --------------------------------------------
                                 echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
                                 echo --------------------------------------------
-                                docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG% sh -c "rm -r -f %RESULT_DIR%"	
+                                docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%	
 							)                        
                         '''
                     }
@@ -215,23 +202,11 @@ pipeline {
 								echo --------------------------------------------
 								echo The docker container ${DOCKER_CONTAINER} is running
 								echo --------------------------------------------
-                                docker exec ${DOCKER_CONTAINER} sh -c "rm -r -f ${RESULT_DIR}"
 							else
-                                echo --------------------------------------------
-                                echo Check if docker image ${DOCKER_IMAGE} exists
-                                echo --------------------------------------------		 
-                                if [ -z "$( docker image ls | grep ${DOCKER_IMAGE} )" ]
-                                then
-                                    echo --------------------------------------------
-                                    echo The docker image ${DOCKER_IMAGE} does not exist
-                                    echo Pull docker image ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
-                                    echo --------------------------------------------
-                                    docker pull ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
-                                fi
                                 echo --------------------------------------------
                                 echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
                                 echo --------------------------------------------
-                                docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG} sh -c "rm -r -f ${RESULT_DIR}"	
+                                docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
 							fi                            
                         '''
                     }  
@@ -278,12 +253,12 @@ pipeline {
                                 catchError(stageResult: 'FAILURE') {
                                     if (params.OS == "windows") {
 				                    	bat '''
-                                        docker exec %DOCKER_CONTAINER% robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "workspace/%JOB_NAME%/%OutputDir%" --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+                                        docker exec %DOCKER_CONTAINER% robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "%RESULT_DIR%" --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
                                         '''
 				                    }
 				                    else {
 				                    	sh '''
-                                        docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
+                                        docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "${RESULT_DIR}" --log ${Prefix}_log.html --output ${Prefix}_output.xml --report ${Prefix}_report.html --xunit ${Prefix}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
                                         '''
 				                    }     
                                 }
@@ -311,10 +286,10 @@ pipeline {
                 
                 script {
 	                if (params.OS == "windows") {
-	                	bat 'docker exec %DOCKER_CONTAINER% rebot --processemptysuite --outputdir "workspace/%JOB_NAME%/%OutputDir%" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml "workspace/%JOB_NAME%/%OutputDir%/*_output.xml"'
+	                	bat 'docker exec %DOCKER_CONTAINER% rebot --processemptysuite --outputdir "%RESULT_DIR%" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml "%RESULT_DIR%/*_output.xml"'
 	                }
 	                else {
-	                	sh 'docker exec ${DOCKER_CONTAINER} rebot --processemptysuite --outputdir "workspace/${JOB_NAME}/${OutputDir}" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml "workspace/${JOB_NAME}/${OutputDir}/*_output.xml"'
+	                	sh 'docker exec ${DOCKER_CONTAINER} rebot --processemptysuite --outputdir "${RESULT_DIR}" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml "${RESULT_DIR}/*_output.xml"'
 	                }
                 }
             }
