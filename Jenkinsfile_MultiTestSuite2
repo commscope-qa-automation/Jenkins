@@ -171,6 +171,8 @@ pipeline {
 					*/  
                     if (params.OS == "windows") {
                         bat '''
+                            SETLOCAL ENABLEDELAYEDEXPANSION
+                            
                             IF EXIST %OutputDir% RD /S /Q %OutputDir%
 
 							echo --------------------------------------------
