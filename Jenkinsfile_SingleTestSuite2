@@ -1103,10 +1103,11 @@ pipeline {
 
 					env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
 										
-					env.DOCKER_REGISTRY = "qa.docker.registry:5000"
+					env.DOCKER_REGISTRY = "docker-registry.qa.ps.arris.com:5000"
 					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
 					env.DOCKER_CONTAINER = "robot-docker-container"																								                            	            	
+					env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir
 
 					/*
 					########################################################################
@@ -1151,7 +1152,7 @@ pipeline {
 							SETLOCAL ENABLEDELAYEDEXPANSION
 
 							echo --------------------------------------------
-							echo Clean up existing outut files in OutputDir
+							echo Clean up existing output files in %OutputDir%
 							echo --------------------------------------------
 	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.xml
 	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.html
@@ -1159,14 +1160,15 @@ pipeline {
 	                        if exist %OutputDir%\\Output for /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") do @if exist "%%d" rd /s /q "%%d"
 	                        
 							echo --------------------------------------------
-							echo Check if the docker container robot-docker is running
+							echo Check if the docker container %DOCKER_CONTAINER% is running
 							echo --------------------------------------------
 							set "containter_status="
 							for /f %%i in ('docker inspect -f '{{.State.Status}}' %DOCKER_CONTAINER%') do set containter_status=%%i
 							if "!containter_status!" == "'running'" (
 								echo --------------------------------------------
-								echo The docker container robot-docker is running
+								echo The docker container %DOCKER_CONTAINER% is running
 								echo --------------------------------------------
+								docker exec %DOCKER_CONTAINER% sh -c "rm -r -f %RESULT_DIR%/*"
 								goto exeTCInDocker
 							) else (
 								echo --------------------------------------------
@@ -1183,23 +1185,10 @@ pipeline {
 									echo --------------------------------------------
 									goto exeTC	
 								) else (
-									set "image="
-									for /f %%m in ('docker image ls^|findstr %DOCKER_IMAGE%') do set image=%%m
-
-									echo --------------------------------------------
-									echo Check if docker image exists
-									echo --------------------------------------------		
-									if "!image!" == "" (
-										echo --------------------------------------------
-										echo The docker image %DOCKER_IMAGE% does not exist
-										echo Pull docker image %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
-										echo --------------------------------------------
-										docker pull %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
-									)
 									echo --------------------------------------------
 									echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
 									echo --------------------------------------------
-									docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%	
+									docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG% sh -c "rm -r -f %RESULT_DIR%/*"	
 									goto exeTCInDocker
 								)
 							)
@@ -1207,9 +1196,9 @@ pipeline {
 							:exeTCInDocker
 							echo Start Robot Framework automation in docker container
 							if "%TestDataFileName%" == "" (
-								docker exec %DOCKER_CONTAINER% robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "workspace/%JOB_NAME%/%OutputDir%" --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+								docker exec %DOCKER_CONTAINER% robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "%RESULT_DIR%" --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
 							) else (
-								docker exec %DOCKER_CONTAINER% robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "workspace/%JOB_NAME%/%OutputDir%" --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
+								docker exec %DOCKER_CONTAINER% robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "%RESULT_DIR%" --log %TestSuiteName%_log.html --output %TestSuiteName%_output.xml --report %TestSuiteName%_report.html --xunit %TestSuiteName%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
 							)
 							goto :eof
 
@@ -1231,9 +1220,9 @@ pipeline {
 								echo Start Robot Framework automation in docker container
 								if [ -z "${TestDataFileName}" ] 
 								then
-									docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
+									docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "${RESULT_DIR}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot                    			
 								else
-									docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "workspace/${JOB_NAME}/${OutputDir}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
+									docker exec ${DOCKER_CONTAINER} robot -v BROWSER_HEADLESS:True ${TestCaseRunFilter} --outputdir "${RESULT_DIR}" --log ${TestSuiteName}_log.html --output ${TestSuiteName}_output.xml --report ${TestSuiteName}_report.html --xunit ${TestSuiteName}_junit.xml --variablefile ${TestDataDir}/${TestDataFileName}.py workspace/ECOManageRobotProject/TestSuite_ECO${CUSTOMER}/TestSuite_${ACS}/TestSuite_${TestSuiteName}.robot
 								fi
 							}
 
@@ -1248,7 +1237,7 @@ pipeline {
 							}
 
 							echo --------------------------------------------
-							echo Clean up existing outut files in OutputDir
+							echo Clean up existing output files in ${OutputDir}
 							echo --------------------------------------------	
                     		if [ -d "${OutputDir}" ] 
                     		then						
@@ -1265,14 +1254,15 @@ pipeline {
                     		fi                    										
                     		
 							echo --------------------------------------------
-							echo Check if the docker container robot-docker is running
+							echo Check if the docker container ${DOCKER_CONTAINER} is running
 							echo --------------------------------------------
 							if [ "$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )" = "running" ]
 							then
 								echo --------------------------------------------
-								echo The docker container robot-docker is running
+								echo The docker container ${DOCKER_CONTAINER} is running
 								echo Start Robot Framework automation in docker container	
 								echo --------------------------------------------
+								docker exec ${DOCKER_CONTAINER} sh -c "rm -r -f %RESULT_DIR%/*"
 								exeTCInDocker
 							else
 								echo --------------------------------------------
@@ -1288,20 +1278,9 @@ pipeline {
 									exeTC	
 								else
 									echo --------------------------------------------
-									echo Check if docker image exists
-									echo --------------------------------------------		 
-									if [ -z "$( docker image ls | grep ${DOCKER_IMAGE} )" ]
-									then
-										echo --------------------------------------------
-										echo The docker image ${DOCKER_IMAGE} does not exist
-										echo Pull docker image ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
-										echo --------------------------------------------
-										docker pull ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
-									fi
-									echo --------------------------------------------
 									echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
 									echo --------------------------------------------
-									docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}	
+									docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG} sh -c "rm -r -f %RESULT_DIR%/*"	
 									exeTCInDocker
 								fi
 							fi
