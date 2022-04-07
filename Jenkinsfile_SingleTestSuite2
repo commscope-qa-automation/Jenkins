@@ -1106,7 +1106,7 @@ pipeline {
 					env.DOCKER_REGISTRY = "docker-registry.qa.ps.arris.com:5000"
 					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
-					env.DOCKER_CONTAINER = "robot-docker-container"																								                            	            	
+					env.DOCKER_CONTAINER = "robot-docker-container"																													                            	            	
 					env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir
 
 					/*
@@ -1124,7 +1124,7 @@ pipeline {
 							)
 						'''
 					}
-					else {
+					else {						
 						sh '''
 							if [ -d "${LOCAL_WORKSPACE}TestData_Custom" ]; then
 								echo TestData directory ${LOCAL_WORKSPACE}TestData_Custom exists
@@ -1211,6 +1211,8 @@ pipeline {
 	                        '''
 						}
                     	else {
+							env.DOCKER_CONTAINER_NUM = params.OS.split("_")[1]
+							env.DOCKER_CONTAINER = env.DOCKER_CONTAINER + env.DOCKER_CONTAINER_NUM
                     		sh '''
 							exeTCInDocker () {
 								echo Start Robot Framework automation in docker container
