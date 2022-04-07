@@ -866,7 +866,7 @@ pipeline {
                     properties([
                         parameters([
                             choice(
-                                choices: ['windows', 'linux_1', 'linux_2', 'linux_3', 'linux_4', 'linux_5'], 
+                                choices: ['windows', 'linux_1', 'linux_2', 'linux_3', 'linux_4', 'linux_5', 'linux_6', 'linux_7', 'linux_8', 'linux_9', 'linux_10'], 
                                 name: 'OS'
                             ),
                             [
@@ -1109,12 +1109,19 @@ pipeline {
 					env.DOCKER_CONTAINER = "robot-docker-container"																													                            	            	
 					env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir
 
+
+					if (isUnix()) {
+						env.AGENT_OS = "linux"
+					} else {
+						env.AGENT_OS = "windows"
+					}
+
 					/*
 					########################################################################
 					For first use, copy TestData_Custom to the <WORKSPACE>
 					########################################################################
 					*/                     
-                    if (params.OS == "windows") {
+                    if (env.AGENT_OS == "windows") {
 						bat '''
 							if exist "%LOCAL_WORKSPACE%TestData_Custom" ( 
 								echo TestData directory %LOCAL_WORKSPACE%TestData_Custom exists 								
@@ -1147,7 +1154,7 @@ pipeline {
 							env.TestCaseRunFilter = params.TestCaseRunFilter1.split(",").collect { "-t " + it }.join(" ")
 						}
 
-						if (params.OS == "windows") {
+						if (env.AGENT_OS == "windows") {
 					        bat '''
 							SETLOCAL ENABLEDELAYEDEXPANSION
 
