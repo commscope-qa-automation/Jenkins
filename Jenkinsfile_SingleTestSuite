@@ -74,21 +74,10 @@ def getLoginUser() {
 
 def LOGIN_USER = getLoginUser()
 
-def getlabel(os) {
-	if (!os) {
-		os = "windows"
-	} 
-	label = "robot_" + os
-	if ( os.contains("windows") ) {
-		label = label + "_" + getLoginUser()
-	}
-	return label
-}
-
 pipeline {
     options {skipDefaultCheckout(true)}
 
-    agent {label getlabel(params.OS)}
+	agent {label "robot_" + LOGIN_USER}
     
     stages {
         stage('Parameters'){
@@ -661,7 +650,7 @@ pipeline {
 									"ECOIOT-5337",
 									"ECOIOT-5340"
                             	]
-                            }
+                            } 
                             else if (TestSuiteName == "test2") {
                             	return [
                             		"",
@@ -671,6 +660,33 @@ pipeline {
                             	return ["Unknown testsuite"]
                             }  
                         '''
+					} else if (env.JOB_NAME.contains('Telstra')) {
+                        choiceTestSuite = '''
+                            return [
+                        	"",
+                        	"SoftwareModules"
+                        	]
+                        ''' 
+                        choiceTestCase = '''
+                            if (TestSuiteName == "SoftwareModules") {
+                            	return [
+                            		"",
+                            		"ECOIOT-6523",
+                            		"ECOIOT-6554",
+                            		"ECOIOT-6511",
+                            		"ECOIOT-6518",
+                            		"ECOIOT-6337",
+                            		"ECOIOT-6512",
+                            		"ECOIOT-6516",
+                            		"ECOIOT-6522",
+                            		"ECOIOT-6514",
+                            		"ECOIOT-6513",
+                            		"ECOIOT-6515"
+                            	]
+                            } else {
+                            	return ["Unknown testsuite"]
+                            } 
+						'''
                     }
 
 					/*
@@ -864,11 +880,7 @@ pipeline {
 					########################################################################
 					*/                    
                     properties([
-                        parameters([
-                            choice(
-                                choices: ['windows', 'linux'], 
-                                name: 'OS'
-                            ),
+                        parameters([                            
                             [
                                 $class: 'ParameterSeparatorDefinition',
                                 name: 'DIR_HEADER',
@@ -1106,15 +1118,21 @@ pipeline {
 					env.DOCKER_REGISTRY = "docker-registry.qa.ps.arris.com:5000"
 					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
-					env.DOCKER_CONTAINER = "robot-docker-container"																								                            	            	
+					env.DOCKER_CONTAINER = "robot-docker-container"	+ "-" + LOGIN_USER																												                            	            	
 					env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir
-
+										
+                    if (isUnix()) {
+                        env.AGENT_OS = "linux"
+                    } else {
+                        env.AGENT_OS = "windows"
+                    }
+                
 					/*
 					########################################################################
 					For first use, copy TestData_Custom to the <WORKSPACE>
 					########################################################################
 					*/                     
-                    if (params.OS == "windows") {
+                    if (AGENT_OS == "windows") {
 						bat '''
 							if exist "%LOCAL_WORKSPACE%TestData_Custom" ( 
 								echo TestData directory %LOCAL_WORKSPACE%TestData_Custom exists 								
@@ -1124,7 +1142,7 @@ pipeline {
 							)
 						'''
 					}
-					else {
+					else {						
 						sh '''
 							if [ -d "${LOCAL_WORKSPACE}TestData_Custom" ]; then
 								echo TestData directory ${LOCAL_WORKSPACE}TestData_Custom exists
@@ -1147,7 +1165,7 @@ pipeline {
 							env.TestCaseRunFilter = params.TestCaseRunFilter1.split(",").collect { "-t " + it }.join(" ")
 						}
 
-						if (params.OS == "windows") {
+						if (AGENT_OS == "windows") {
 					        bat '''
 							SETLOCAL ENABLEDELAYEDEXPANSION
 
@@ -1210,7 +1228,7 @@ pipeline {
 							:eof
 	                        '''
 						}
-                    	else {
+                    	else {							
                     		sh '''
 							exeTCInDocker () {
 								echo Start Robot Framework automation in docker container
