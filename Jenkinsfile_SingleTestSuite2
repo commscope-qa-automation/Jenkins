@@ -866,7 +866,7 @@ pipeline {
                     properties([
                         parameters([
                             choice(
-                                choices: ['windows', 'linux'], 
+                                choices: ['windows', 'linux_1', 'linux_2', 'linux_3', 'linux_4', 'linux_5'], 
                                 name: 'OS'
                             ),
                             [
@@ -1152,13 +1152,10 @@ pipeline {
 							SETLOCAL ENABLEDELAYEDEXPANSION
 
 							echo --------------------------------------------
-							echo Clean up existing output files in %OutputDir%
+							echo Remove existing %OutputDir%
 							echo --------------------------------------------
-	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.xml
-	                        if exist %OutputDir% del /q %OutputDir%\\%TestSuiteName%_*.html
-	                        if exist %OutputDir%\\Screenshots del /q %OutputDir%\\Screenshots\\*%TestSuiteName%*.png
-	                        if exist %OutputDir%\\Output for /d /r . %%d IN ("%OutputDir%\\Output\\*%TestSuiteName%*") do @if exist "%%d" rd /s /q "%%d"
-	                        
+	                        IF EXIST %OutputDir% RD /S /Q %OutputDir%
+
 							echo --------------------------------------------
 							echo Check if the docker container %DOCKER_CONTAINER% is running
 							echo --------------------------------------------
@@ -1236,21 +1233,9 @@ pipeline {
 							}
 
 							echo --------------------------------------------
-							echo Clean up existing output files in ${OutputDir}
+							echo Remove existing ${OutputDir}
 							echo --------------------------------------------	
-                    		if [ -d "${OutputDir}" ] 
-                    		then						
-                    			rm -f "${OutputDir}/${TestSuiteName}_*.xml"
-                    			rm -f "${OutputDir}/${TestSuiteName}_*.html"
-                    			if [ -d "${OutputDir}/Screenshots" ]
-                    			then
-                    				rm -f "${OutputDir}/Screenshots/*${TestSuiteName}*.png"
-                    			fi
-                    			if [ -d "${OutputDir}/Output" ]
-                    			then
-                    				rm -f "${OutputDir}/Output/*${TestSuiteName}*"
-                    			fi
-                    		fi                    										
+                    		rm -r -f ${OutputDir}                    										
                     		
 							echo --------------------------------------------
 							echo Check if the docker container ${DOCKER_CONTAINER} is running
