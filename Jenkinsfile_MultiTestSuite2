@@ -1,7 +1,7 @@
 properties([
     parameters([
         choice(
-            choices: ['windows', 'linux'], 
+            choices: ['windows', 'linux_1', 'linux_2', 'linux_3', 'linux_4', 'linux_5', 'linux_6', 'linux_7', 'linux_8', 'linux_9', 'linux_10'], 
             name: 'OS'
         ),  
         string(
@@ -173,6 +173,9 @@ pipeline {
                         bat '''
                             SETLOCAL ENABLEDELAYEDEXPANSION
 
+							echo --------------------------------------------
+							echo Remove existing %OutputDir%
+							echo --------------------------------------------
                             IF EXIST %OutputDir% RD /S /Q %OutputDir%
 
 							echo --------------------------------------------
@@ -193,8 +196,12 @@ pipeline {
                         '''
                     }
                     else {
+                        env.DOCKER_CONTAINER_NUM = params.OS.split("_")[1]
+                        env.DOCKER_CONTAINER = env.DOCKER_CONTAINER + env.DOCKER_CONTAINER_NUM                        
                         sh '''
-                            pwd
+							echo --------------------------------------------
+							echo Remove existing ${OutputDir}
+							echo --------------------------------------------
                             rm -r -f "${OutputDir}"
 
 							echo --------------------------------------------
