@@ -1,9 +1,5 @@
 properties([
-    parameters([
-        choice(
-            choices: ['windows', 'linux_1', 'linux_2', 'linux_3', 'linux_4', 'linux_5', 'linux_6', 'linux_7', 'linux_8', 'linux_9', 'linux_10'], 
-            name: 'OS'
-        ),  
+    parameters([  
         string(
             defaultValue: 'Jenkins_Robot_Results', 
             name: 'OutputDir',
@@ -96,23 +92,11 @@ def getLoginUser() {
 }
 
 def LOGIN_USER = getLoginUser()
-
-def getlabel(os) {
-	if (!os) {
-		os = "windows"
-	} 
-	label = "robot_" + os
-	if ( os == "windows" ) {
-		label = label + "_" + getLoginUser()
-	}
-	return label
-}
                     
 pipeline {
     options {skipDefaultCheckout(true)}
-    
-    //agent any
-    agent {label getlabel(params.OS)}
+
+    agent {label "robot_" + LOGIN_USER}
                    
     stages {
         stage ("Check out scripts") {
@@ -161,15 +145,20 @@ pipeline {
 					env.DOCKER_REGISTRY = "docker-registry.qa.ps.arris.com:5000"
 					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
-					env.DOCKER_CONTAINER = "robot-docker-container"	    
+					env.DOCKER_CONTAINER = "robot-docker-container"	+ "-" + LOGIN_USER	    
                     env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir           
 
+                    if (isUnix()) {
+                        env.AGENT_OS = "linux"
+                    } else {
+                        env.AGENT_OS = "windows"
+                    }
 					/*
 					########################################################################
 					Start checking docker container
 					########################################################################
 					*/  
-                    if (params.OS == "windows") {
+                    if (AGENT_OS == "windows") {
                         bat '''
                             SETLOCAL ENABLEDELAYEDEXPANSION
 
@@ -195,9 +184,7 @@ pipeline {
 							)                        
                         '''
                     }
-                    else {
-                        env.DOCKER_CONTAINER_NUM = params.OS.split("_")[1]
-                        env.DOCKER_CONTAINER = env.DOCKER_CONTAINER + env.DOCKER_CONTAINER_NUM                        
+                    else {                      
                         sh '''
 							echo --------------------------------------------
 							echo Remove existing ${OutputDir}
@@ -261,7 +248,7 @@ pipeline {
                             echo "Create stage: ${env.TestSuiteName} - ${env.ProjectCycle}"
                             stage(env.TestSuiteName + "-" + env.ProjectCycle) {
                                 catchError(stageResult: 'FAILURE') {
-                                    if (params.OS == "windows") {
+                                    if (AGENT_OS == "windows") {
 				                    	bat '''
                                         docker exec %DOCKER_CONTAINER% robot -v BROWSER_HEADLESS:True %TestCaseRunFilter% --outputdir "%RESULT_DIR%" --log %Prefix%_log.html --output %Prefix%_output.xml --report %Prefix%_report.html --xunit %Prefix%_junit.xml --variablefile %TestDataDir%/%TestDataFileName%.py workspace/ECOManageRobotProject/TestSuite_ECO%CUSTOMER%/TestSuite_%ACS%/TestSuite_%TestSuiteName%.robot
                                         '''
@@ -295,7 +282,7 @@ pipeline {
                 }
                 
                 script {
-	                if (params.OS == "windows") {
+	                if (AGENT_OS == "windows") {
 	                	bat 'docker exec %DOCKER_CONTAINER% rebot --processemptysuite --outputdir "%RESULT_DIR%" --output Final_output.xml --report Final_report.html --xunit Final_junit.xml "%RESULT_DIR%/*_output.xml"'
 	                }
 	                else {

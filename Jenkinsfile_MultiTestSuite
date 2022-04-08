@@ -1,9 +1,5 @@
 properties([
-    parameters([
-        choice(
-            choices: ['windows', 'linux_1', 'linux_2', 'linux_3', 'linux_4', 'linux_5', 'linux_6', 'linux_7', 'linux_8', 'linux_9', 'linux_10'], 
-            name: 'OS'
-        ),  
+    parameters([  
         string(
             defaultValue: 'Jenkins_Robot_Results', 
             name: 'OutputDir',
