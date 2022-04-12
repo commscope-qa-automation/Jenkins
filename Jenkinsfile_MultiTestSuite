@@ -142,11 +142,13 @@ pipeline {
 	                }
 	                
                     env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
+                    env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir
+
 					env.DOCKER_REGISTRY = "docker-registry.qa.ps.arris.com:5000"
-					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
+					env.DOCKER_IMAGE = "robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
-					env.DOCKER_CONTAINER = "robot-docker-container"	+ "-" + LOGIN_USER	    
-                    env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir           
+					env.DOCKER_IMAGE_FULL = env.DOCKER_REGISTRY + "/" + env.DOCKER_IMAGE + ":" + env.DOCKER_IMAGE_TAG
+					env.DOCKER_CONTAINER = "robot-docker-container"	+ "-" + LOGIN_USER	                                   
 
                     if (isUnix()) {
                         env.AGENT_OS = "linux"
@@ -178,9 +180,9 @@ pipeline {
 								echo --------------------------------------------
 							) else (
                                 echo --------------------------------------------
-                                echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
+                                echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
                                 echo --------------------------------------------
-                                docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%	
+                                docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE_FULL%	
 							)                        
                         '''
                     }
@@ -201,9 +203,9 @@ pipeline {
 								echo --------------------------------------------
 							else
                                 echo --------------------------------------------
-                                echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
+                                echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE_FULL}
                                 echo --------------------------------------------
-                                docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
+                                docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE_FULL}
 							fi                            
                         '''
                     }  
