@@ -110,7 +110,8 @@ pipeline {
                         	"RGFMECO69NBIUpgrade",	
                         	"RGFMECO134Docker",
                         	"FirmwareUpgrade",
-                        	"RG5268AC"
+                        	"RG5268AC",
+							"ECOControlCR1737EventNotification"
                         	]
                         '''
 
