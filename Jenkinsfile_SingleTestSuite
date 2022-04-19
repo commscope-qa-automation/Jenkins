@@ -511,6 +511,19 @@ pipeline {
                             		"ECOIOT-4739",
                             		"ECOIOT-4740"							
                             	]	
+                            } else if (TestSuiteName == "ECOControlCR1737EventNotification") {
+                            	return [
+                            		"",
+                            		"ECOIOT-6373",
+                            		"ECOIOT-6374",
+                            		"ECOIOT-6375",
+                            		"ECOIOT-6379",
+                            		"ECOIOT-6380",
+									"ECOIOT-6424",	
+									"ECOIOT-6425",
+									"ECOIOT-6426",	
+									"ECOIOT-6428"					
+                            	]	
                             } else {
                             	return ["Unknown testsuite"]
                             }
