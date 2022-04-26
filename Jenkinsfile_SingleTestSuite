@@ -679,7 +679,7 @@ pipeline {
                             return [
                         	"",
                         	"SoftwareModules",
-							"TelstraRegression"
+				"TelstraRegression"
                         	]
                         ''' 
                         choiceTestCase = '''
