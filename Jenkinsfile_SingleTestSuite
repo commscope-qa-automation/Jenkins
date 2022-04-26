@@ -710,9 +710,9 @@ pipeline {
                             	]
                             } else {
                             	return ["Unknown testsuite"]
-                            } 
-					}		
+                            } 		
 						''' 
+					}	
 					/*
 					########################################################################
 					Define string of different functions for Choice Parameter script content 
