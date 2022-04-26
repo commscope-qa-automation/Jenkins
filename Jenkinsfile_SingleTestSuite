@@ -664,7 +664,8 @@ pipeline {
                         choiceTestSuite = '''
                             return [
                         	"",
-                        	"SoftwareModules"
+                        	"SoftwareModules",
+							"TelstraRegression"
                         	]
                         ''' 
                         choiceTestCase = '''
@@ -683,11 +684,20 @@ pipeline {
                             		"ECOIOT-6513",
                             		"ECOIOT-6515"
                             	]
+                            } else if (TestSuiteName == "TelstraRegression") {
+                            	return [
+                            		"",
+                            		"ECOIOT-5535",
+                            		"ECOIOT-5533",
+                            		"ECOIOT-5538",
+                            		"ECOIOT-6592",
+                            		"ECOIOT-5537",
+                            		"ECOIOT-3493"                            		
+                            	]
                             } else {
                             	return ["Unknown testsuite"]
                             } 
-						'''
-                    }
+						''' 
 
 					/*
 					########################################################################
