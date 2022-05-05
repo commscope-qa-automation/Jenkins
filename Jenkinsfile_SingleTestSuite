@@ -523,7 +523,19 @@ pipeline {
 									"ECOIOT-6424",	
 									"ECOIOT-6425",
 									"ECOIOT-6426",	
-									"ECOIOT-6428"					
+									"ECOIOT-6428",
+									"ECOIOT-6597",
+									"ECOIOT-6598",
+									"ECOIOT-6599",
+									"ECOIOT-6600",
+									"ECOIOT-6601",
+									"ECOIOT-6602",
+									"ECOIOT-6604",
+									"ECOIOT-6605",	
+									"ECOIOT-6606",	
+									"ECOIOT-6607",
+									"ECOIOT-6608",	
+									"ECOIOT-6609"	
                             	]	
                             } else {
                             	return ["Unknown testsuite"]
@@ -1200,25 +1212,33 @@ pipeline {
 								echo --------------------------------------------							
 								goto exeTCInDocker
 							) else (
-								echo --------------------------------------------
-								echo The docker container %DOCKER_CONTAINER% is not running
-								echo Check if docker is installed
-								echo --------------------------------------------
-								set "docker_installed="
-								for /f %%j in ('docker version ^| findstr Server') do set docker_installed=%%j
-	
-								if "!docker_installed!" == "" (
+								if "!containter_status!" == "'exited'" (
 									echo --------------------------------------------
-									echo Docker is not installed
-									echo Start Robot Framework automation without docker container
-									echo --------------------------------------------
-									goto exeTC	
+									echo The docker container %DOCKER_CONTAINER% is stopped
+									echo Start the stopped docker container %DOCKER_CONTAINER%
+									echo --------------------------------------------	
+									docker start %DOCKER_CONTAINER%								
 								) else (
 									echo --------------------------------------------
-									echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
+									echo The docker container %DOCKER_CONTAINER% is not running
+									echo Check if docker is installed
 									echo --------------------------------------------
-									docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE_FULL%	
-									goto exeTCInDocker
+									set "docker_installed="
+									for /f %%j in ('docker version ^| findstr Server') do set docker_installed=%%j
+		
+									if "!docker_installed!" == "" (
+										echo --------------------------------------------
+										echo Docker is not installed
+										echo Start Robot Framework automation without docker container
+										echo --------------------------------------------
+										goto exeTC	
+									) else (
+										echo --------------------------------------------
+										echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
+										echo --------------------------------------------
+										docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE_FULL%	
+										goto exeTCInDocker
+									)
 								)
 							)
 
@@ -1273,13 +1293,21 @@ pipeline {
 							echo --------------------------------------------
 							echo Check if the docker container ${DOCKER_CONTAINER} is running
 							echo --------------------------------------------
-							if [ "$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )" = "running" ]
+							container_status = $( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )
+							if [ "${container_status}" = "running" ]
 							then
 								echo --------------------------------------------
 								echo The docker container ${DOCKER_CONTAINER} is running
 								echo Start Robot Framework automation in docker container	
 								echo --------------------------------------------
 								exeTCInDocker
+							elif [ "${container_status}" = "'exited'" ]
+							then
+								echo --------------------------------------------
+								echo The docker container ${DOCKER_CONTAINER} is stopped
+								echo Start the stopped docker container ${DOCKER_CONTAINER}
+								echo --------------------------------------------	
+								docker start ${DOCKER_CONTAINER}	
 							else
 								echo --------------------------------------------
 								echo The docker container ${DOCKER_CONTAINER} is not running
