@@ -726,7 +726,7 @@ pipeline {
                         	]
                         ''' 
                         choiceTestCase = '''
-                            if (TestSuiteName == "Sagemcom") {
+                            if (TestSuiteName == "ECO_Sagemcom") {
                             	return [
                             		"",
                             		"ECOIOT-6316",
