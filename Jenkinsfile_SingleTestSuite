@@ -1166,7 +1166,9 @@ pipeline {
 	                    env.CUSTOMER = "_ATT"
 	                } else if (env.JOB_NAME.contains('Ziply')) {
 	                    env.CUSTOMER = "_Ziply"
-	                } else if (env.JOB_NAME.contains('Sasktel')) {
+	                } else if (env.JOB_NAME.contains('Frontier')) {
+	                    env.CUSTOMER = "_Frontier"
+			} else if (env.JOB_NAME.contains('Sasktel')) {
 	                    env.CUSTOMER = "_Sasktel"
 	                } else if (env.JOB_NAME.contains('Telstra')) {
 	                    env.CUSTOMER = "_Telstra"
