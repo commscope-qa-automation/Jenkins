@@ -690,7 +690,8 @@ pipeline {
                         choiceTestSuite = '''
                             return [
                         	"",
-                        	"SoftwareModules"
+                        	"SoftwareModules",
+				"TelstraRegression"
                         	]
                         ''' 
                         choiceTestCase = '''
@@ -709,12 +710,66 @@ pipeline {
                             		"ECOIOT-6513",
                             		"ECOIOT-6515"
                             	]
+                            } else if (TestSuiteName == "TelstraRegression") {
+                            	return [
+                            		"",
+                            		"ECOIOT-5535",
+                            		"ECOIOT-5533",
+                            		"ECOIOT-5538",
+                            		"ECOIOT-6592",
+                            		"ECOIOT-5537",
+                            		"ECOIOT-3493",
+                                        "ECOIOT-5810",
+                             		"ECOIOT-5811",
+                            		"ECOIOT-5813",
+                            		"ECOIOT-5814",
+                            		"ECOIOT-5815",
+                            		"ECOIOT-5816"
+                            	]
                             } else {
                             	return ["Unknown testsuite"]
-                            } 
-						'''
-                    }
-
+                            } 		
+						''' 
+					}	else if (env.JOB_NAME.contains('Frontier')) {
+                        choiceTestSuite = '''
+                            return [
+                        	"",
+                        	"Sagemcom"
+                        	]
+                        ''' 
+                        choiceTestCase = '''
+                            if (TestSuiteName == "Sagemcom") {
+                            	return [
+                            		"",
+                            		"ECOIOT-6316",
+                            		"ECOIOT-6458",
+                            		"ECOIOT-6459",
+                            		"ECOIOT-6313a",
+                            		"ECOIOT-6313b",
+                            		"ECOIOT-6313c",
+                            		"ECOIOT-6503",
+                            		"ECOIOT-6504",
+                            		"ECOIOT-6506",
+                            		"ECOIOT-6505",
+					"ECOIOT-6288",
+                            		"ECOIOT-6291",
+                            		"ECOIOT-6292",
+					"ECOIOT-6293",
+                            		"ECOIOT-6320",
+                            		"ECOIOT-6341",
+                            		"ECOIOT-6315",
+					"ECOIOT-6332",
+                            		"ECOIOT-6331",
+                            		"ECOIOT-6339",
+                            		"ECOIOT-6337",
+					"ECOIOT-6327",
+                            		"ECOIOT-6298"
+                            	]                           
+                            } else {
+                            	return ["Unknown testsuite"]
+                            } 		
+						''' 
+					}
 					/*
 					########################################################################
 					Define string of different functions for Choice Parameter script content 
