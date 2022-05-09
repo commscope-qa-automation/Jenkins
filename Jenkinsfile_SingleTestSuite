@@ -739,18 +739,18 @@ pipeline {
                             		"ECOIOT-6504",
                             		"ECOIOT-6506",
                             		"ECOIOT-6505",
-									"ECOIOT-6288",
+					"ECOIOT-6288",
                             		"ECOIOT-6291",
                             		"ECOIOT-6292",
-									"ECOIOT-6293",
+					"ECOIOT-6293",
                             		"ECOIOT-6320",
                             		"ECOIOT-6341",
                             		"ECOIOT-6315",
-									"ECOIOT-6332",
+					"ECOIOT-6332",
                             		"ECOIOT-6331",
                             		"ECOIOT-6339",
                             		"ECOIOT-6337",
-									"ECOIOT-6327",
+					"ECOIOT-6327",
                             		"ECOIOT-6298"
                             	]                           
                             } else {
