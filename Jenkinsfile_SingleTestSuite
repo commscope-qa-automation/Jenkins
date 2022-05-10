@@ -722,11 +722,11 @@ pipeline {
                         choiceTestSuite = '''
                             return [
                         	"",
-                        	"Sagemcom"
+                        	"ECO_Sagemcom"
                         	]
                         ''' 
                         choiceTestCase = '''
-                            if (TestSuiteName == "Sagemcom") {
+                            if (TestSuiteName == "ECO_Sagemcom") {
                             	return [
                             		"",
                             		"ECOIOT-6316",
