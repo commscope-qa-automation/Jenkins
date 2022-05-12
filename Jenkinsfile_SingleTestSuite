@@ -730,6 +730,7 @@ pipeline {
                             	return [
                             		"",
                             		"ECOIOT-6316",
+					"ECOIOT-6371",
                             		"ECOIOT-6458",
                             		"ECOIOT-6459",
                             		"ECOIOT-6313a",
