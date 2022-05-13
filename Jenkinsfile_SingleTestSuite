@@ -733,6 +733,8 @@ pipeline {
 					"ECOIOT-6371",
                             		"ECOIOT-6458",
                             		"ECOIOT-6459",
+					"ECOIOT-6562",
+					"ECOIOT-6563",
                             		"ECOIOT-6313a",
                             		"ECOIOT-6313b",
                             		"ECOIOT-6313c",
