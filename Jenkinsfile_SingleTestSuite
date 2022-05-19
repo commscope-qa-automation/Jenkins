@@ -1354,6 +1354,7 @@ pipeline {
 							echo Check if the docker container ${DOCKER_CONTAINER} is running
 							echo --------------------------------------------
 							container_status=$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )
+							echo a${container_status}b
 							if [ "${container_status}" = "running" ]
 							then
 								echo --------------------------------------------
