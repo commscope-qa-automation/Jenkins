@@ -535,11 +535,7 @@ pipeline {
 									"ECOIOT-6606",	
 									"ECOIOT-6607",
 									"ECOIOT-6608",	
-									"ECOIOT-6609"	
-									"ECOIOT-6424",	
-									"ECOIOT-6425",
-									"ECOIOT-6426",	
-									"ECOIOT-6428"					
+									"ECOIOT-6609"						
                             	]	
                             } else {
                             	return ["Unknown testsuite"]
