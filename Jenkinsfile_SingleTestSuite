@@ -1370,6 +1370,7 @@ pipeline {
 								echo Start the stopped docker container ${DOCKER_CONTAINER}
 								echo --------------------------------------------	
 								docker start ${DOCKER_CONTAINER}	
+								exeTCInDocker
 							else
 								echo --------------------------------------------
 								echo The docker container ${DOCKER_CONTAINER} is not running
