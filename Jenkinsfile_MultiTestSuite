@@ -131,7 +131,9 @@ pipeline {
 	                    env.CUSTOMER = "_ATT"
 	                } else if (env.JOB_NAME.contains('Ziply')) {
 	                    env.CUSTOMER = "_Ziply"
-	                } else if (env.JOB_NAME.contains('Sasktel')) {
+	                } else if (env.JOB_NAME.contains('Frontier')) {
+	                    env.CUSTOMER = "_Frontier"	                
+                    } else if (env.JOB_NAME.contains('Sasktel')) {
 	                    env.CUSTOMER = "_Sasktel"
 	                } else if (env.JOB_NAME.contains('Telstra')) {
 	                    env.CUSTOMER = "_Telstra"
@@ -179,10 +181,18 @@ pipeline {
 								echo The docker container %DOCKER_CONTAINER% is running
 								echo --------------------------------------------
 							) else (
-                                echo --------------------------------------------
-                                echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
-                                echo --------------------------------------------
-                                docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE_FULL%	
+                                if "!containter_status!" == "'exited'" (
+									echo --------------------------------------------
+									echo The docker container %DOCKER_CONTAINER% is stopped
+									echo Start the stopped docker container %DOCKER_CONTAINER%
+									echo --------------------------------------------	
+									docker start %DOCKER_CONTAINER%	
+                                ) else (
+                                    echo --------------------------------------------
+                                    echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
+                                    echo --------------------------------------------
+                                    docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src:z -d -t %DOCKER_IMAGE_FULL%	
+                                )
 							)                        
                         '''
                     }
@@ -196,12 +206,22 @@ pipeline {
 							echo --------------------------------------------
 							echo Check if the docker container ${DOCKER_CONTAINER} is running
 							echo --------------------------------------------
-							if [ "$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )" = "running" ]
+                            set +e
+							container_status=$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )
+							set -e
+							if [ "${container_status}" = "running" ]
 							then
 								echo --------------------------------------------
 								echo The docker container ${DOCKER_CONTAINER} is running
 								echo --------------------------------------------
-							else
+							elif [ "${container_status}" = "exited" ]
+							then
+								echo --------------------------------------------
+								echo The docker container ${DOCKER_CONTAINER} is stopped
+								echo Start the stopped docker container ${DOCKER_CONTAINER}
+								echo --------------------------------------------	
+								docker start ${DOCKER_CONTAINER}
+                            else
                                 echo --------------------------------------------
                                 echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE_FULL}
                                 echo --------------------------------------------

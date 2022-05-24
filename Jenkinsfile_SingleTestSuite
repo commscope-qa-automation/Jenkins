@@ -1183,7 +1183,7 @@ pipeline {
 	                    env.CUSTOMER = "_Ziply"
 	                } else if (env.JOB_NAME.contains('Frontier')) {
 	                    env.CUSTOMER = "_Frontier"
-			} else if (env.JOB_NAME.contains('Sasktel')) {
+					} else if (env.JOB_NAME.contains('Sasktel')) {
 	                    env.CUSTOMER = "_Sasktel"
 	                } else if (env.JOB_NAME.contains('Telstra')) {
 	                    env.CUSTOMER = "_Telstra"
@@ -1296,7 +1296,7 @@ pipeline {
 										echo --------------------------------------------
 										echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
 										echo --------------------------------------------
-										docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE_FULL%	
+										docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src:z -d -t %DOCKER_IMAGE_FULL%	
 										goto exeTCInDocker
 									)
 								)
