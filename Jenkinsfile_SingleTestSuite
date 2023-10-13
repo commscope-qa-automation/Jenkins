@@ -817,7 +817,7 @@ pipeline {
 								}
 							}   
 							
-							def jiraBaseURL = "https://etrack.arrisi.com"
+							def jiraBaseURL = "https://odart.arrisi.com"
 							def project = "ECOIOT"
 						
 							def projectId = ""
@@ -864,7 +864,7 @@ pipeline {
 						def jsonSlurper = new JsonSlurper()
 						def data = jsonSlurper.parse(new File(filename))
 						
-						def jiraBaseURL = "https://etrack.arrisi.com"
+						def jiraBaseURL = "https://odart.arrisi.com"
 						def projectId =  data["projectId"]
 						def versionId = data["versionNameId"][ProjectVersion]
 						def cycleNameId = [:]
@@ -924,7 +924,7 @@ pipeline {
 						def jsonSlurper = new JsonSlurper()
 						def data = jsonSlurper.parse(new File(filename))
 						
-						def jiraBaseURL = "https://etrack.arrisi.com"
+						def jiraBaseURL = "https://odart.arrisi.com"
 						def projectId =  data["projectId"]
 						def versionId = data["versionId"]
 						def cycleId = data["cycleNameId"][ProjectCycle]
@@ -1296,7 +1296,7 @@ pipeline {
 										echo --------------------------------------------
 										echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
 										echo --------------------------------------------
-										docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src:z -d -t %DOCKER_IMAGE_FULL%	
+										docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE_FULL%	
 										goto exeTCInDocker
 									)
 								)
@@ -1387,7 +1387,7 @@ pipeline {
 									echo --------------------------------------------
 									echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE_FULL}
 									echo --------------------------------------------
-									docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE_FULL}	
+									docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src:z -d -t ${DOCKER_IMAGE_FULL}	
 									exeTCInDocker
 								fi
 							fi
@@ -1478,7 +1478,7 @@ pipeline {
 						
 						// Update JIRA test case status
 						println("Start updating Etrack test case status.")
-						def jiraBaseURL = "https://etrack.arrisi.com"
+						def jiraBaseURL = "https://odart.arrisi.com"
 						def project = "ECOIOT"
 						
 						// Read the junit file generated from Robot Framework

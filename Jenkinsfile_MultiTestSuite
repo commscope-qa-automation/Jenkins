@@ -16,23 +16,23 @@ properties([
             defaultValue: '''TestData: All_TestData_att76_52141N005018
 TestSuiteName: ECOManageGUI
 TestCaseFilter: -t ECOIOT-391
-EtrackVersion: ATT_FW_Upgrade_5268
-EtrackCycle: GUI Operations
-EtrackFolder: 
+JIRAVersion: ATT_FW_Upgrade_5268
+JIRACycle: GUI Operations
+JIRAFolder: 
 ###############################################
 TestData: All_TestData_att76_52141N005018
 TestSuiteName: CR1698IPDR
 TestCaseFilter: -t ECOIOT-4399 -t ECOIOT-4404
-EtrackVersion: ATT_FW_Upgrade_5268
-EtrackCycle: CR1698IPDR
-EtrackFolder: 
+JIRAVersion: ATT_FW_Upgrade_5268
+JIRACycle: CR1698IPDR
+JIRAFolder: 
 ###############################################
 TestData: All_TestData_att76_52141N005018
 TestSuiteName: ECOManageBDC
 TestCaseFilter: 
-EtrackVersion: ATT_FW_Upgrade_5268
-EtrackCycle: Bulk Data Collection
-EtrackFolder: 
+JIRAVersion: ATT_FW_Upgrade_5268
+JIRACycle: Bulk Data Collection
+JIRAFolder: 
 ###############################################''', 
             name: 'InputData',
             description: ''
@@ -191,7 +191,7 @@ pipeline {
                                     echo --------------------------------------------
                                     echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
                                     echo --------------------------------------------
-                                    docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src:z -d -t %DOCKER_IMAGE_FULL%	
+                                    docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE_FULL%	
                                 )
 							)                        
                         '''
@@ -225,7 +225,7 @@ pipeline {
                                 echo --------------------------------------------
                                 echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE_FULL}
                                 echo --------------------------------------------
-                                docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE_FULL}
+                                docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src:z -d -t ${DOCKER_IMAGE_FULL}
 							fi                            
                         '''
                     }  
@@ -341,7 +341,7 @@ pipeline {
             script {
                 /*
                 ########################################################################
-                Start Etrack
+                Start JIRA
                 ########################################################################
                 */                
                 def cycleDict = [:]
@@ -376,8 +376,8 @@ pipeline {
                     	return
                     }
                     
-                    // Get Etrack username and password from global credentials
-                    println("Get Etrack credentials.")
+                    // Get JIRA username and password from global credentials
+                    println("Get JIRA credentials.")
                     //println("LOGIN_USER:" + LOGIN_USER)
                     
                     def username = ""
@@ -398,8 +398,8 @@ pipeline {
                     //println("password:" + password)
                     
                     // Update JIRA test case status
-                    println("Start updating Etrack test case status.")
-                    def jiraBaseURL = "https://etrack.arrisi.com"
+                    println("Start updating JIRA test case status.")
+                    def jiraBaseURL = "https://odart.arrisi.com"
                     def project = "ECOIOT"
                     
                     // Read the junit file generated from Robot Framework
