@@ -244,7 +244,7 @@ pipeline {
                             env.ProjectVersion = list[3]
                             env.ProjectCycle = list[4]
                             env.ProjectFolder = list[5]
-                            env.Prefix = env.TestSuiteName + "_" + env.ProjectCycle.replaceAll(" ", "")
+                            env.Prefix = env.TestSuiteName + "_" + env.ProjectCycle.replaceAll(" ", "") + "_" + env.ProjectFolder.replaceAll(" ", "")
 
                             if (env.TestSuiteName.contains("ECOControl")) {
                                 env.ACS = "ECOControl"

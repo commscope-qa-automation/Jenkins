@@ -211,8 +211,153 @@ pipeline {
             steps {
             	script {
 	                currentBuild.displayName = "#" + currentBuild.number + " " + LOGIN_USER + " - " + params.Environment
-            	            	
-                    bat 'robot -t "Check Status Or Restart App" -v "ENV:%Environment%" -v "OPER:%Operation%" -v "APPS:%Application%" -v "AWS_PRIVATE_KEY:%SSHKey%" ../ECOManageRobotProject/TestSuite_ECO_ATT/TestSuite_ECOManage/ECOEnv.robot'                       
+
+        	        if (env.JOB_NAME.contains('ATT')) {
+	                    env.CUSTOMER = "_ATT"
+	                } else if (env.JOB_NAME.contains('Ziply')) {
+	                    env.CUSTOMER = "_Ziply"
+	                } else if (env.JOB_NAME.contains('Frontier')) {
+	                    env.CUSTOMER = "_Frontier"
+					} else if (env.JOB_NAME.contains('Sasktel')) {
+	                    env.CUSTOMER = "_Sasktel"
+	                } else if (env.JOB_NAME.contains('Telstra')) {
+	                    env.CUSTOMER = "_Telstra"
+	                } else if (env.JOB_NAME.contains('Rogers')) {
+	                    env.CUSTOMER = "_Rogers"
+	                } else {
+	                    env.CUSTOMER = "_Test"
+	                }
+
+                    env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
+                    env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir					
+                                        
+                    env.DOCKER_REGISTRY = "docker-registry.qa.ps.arris.com:5000"
+                    env.DOCKER_IMAGE = "robot-docker"	
+                    env.DOCKER_IMAGE_TAG = "1"	
+                    env.DOCKER_IMAGE_FULL = env.DOCKER_REGISTRY + "/" + env.DOCKER_IMAGE + ":" + env.DOCKER_IMAGE_TAG
+                    env.DOCKER_CONTAINER = "robot-docker-container"	+ "-" + LOGIN_USER																											                            	           											
+                    
+                    if (isUnix()) {
+                        env.AGENT_OS = "linux"
+                    } else {
+                        env.AGENT_OS = "windows"
+                    }
+
+                    if (AGENT_OS == "windows") {
+                        bat '''
+                            SETLOCAL ENABLEDELAYEDEXPANSION
+
+                            echo --------------------------------------------
+                            echo Check if the docker container %DOCKER_CONTAINER% is running
+                            echo --------------------------------------------
+                            set "containter_status="
+                            for /f %%i in ('docker inspect -f '{{.State.Status}}' %DOCKER_CONTAINER%') do set containter_status=%%i
+                            if "!containter_status!" == "'running'" (
+                                echo --------------------------------------------
+                                echo The docker container %DOCKER_CONTAINER% is running
+                                echo --------------------------------------------							
+                                goto exeTCInDocker
+                            ) else (
+                                if "!containter_status!" == "'exited'" (
+                                    echo --------------------------------------------
+                                    echo The docker container %DOCKER_CONTAINER% is stopped
+                                    echo Start the stopped docker container %DOCKER_CONTAINER%
+                                    echo --------------------------------------------	
+                                    docker start %DOCKER_CONTAINER%								
+                                ) else (
+                                    echo --------------------------------------------
+                                    echo The docker container %DOCKER_CONTAINER% is not running
+                                    echo Check if docker is installed
+                                    echo --------------------------------------------
+                                    set "docker_installed="
+                                    for /f %%j in ('docker version ^| findstr Server') do set docker_installed=%%j
+        
+                                    if "!docker_installed!" == "" (
+                                        echo --------------------------------------------
+                                        echo Docker is not installed
+                                        echo Start Robot Framework automation without docker container
+                                        echo --------------------------------------------
+                                        goto exeTC	
+                                    ) else (
+                                        echo --------------------------------------------
+                                        echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
+                                        echo --------------------------------------------
+                                        docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE_FULL%	
+                                        goto exeTCInDocker
+                                    )
+                                )
+                            )
+
+                            :exeTCInDocker
+                            echo Start Robot Framework automation in docker container
+                            docker exec %DOCKER_CONTAINER% robot -t "Check Status Or Restart App" -v "ENV:%Environment%" -v "OPER:%Operation%" -v "APPS:%Application%" -v "AWS_PRIVATE_KEY:%SSHKey%" workspace/ECOManageRobotProject/TestSuite_ECO_%CUSTOMER%/TestSuite_ECOManage/ECOEnv.robot
+
+                            goto :eof
+
+                            :exeTC
+                            echo Start Robot Framework automation
+                            robot -t "Check Status Or Restart App" -v "ENV:%Environment%" -v "OPER:%Operation%" -v "APPS:%Application%" -v "AWS_PRIVATE_KEY:%SSHKey%" ../ECOManageRobotProject/TestSuite_ECO_%CUSTOMER%/TestSuite_ECOManage/ECOEnv.robot
+                            goto :eof
+
+                            :eof
+                        '''
+                    }
+                    else {
+                        sh '''
+                            exeTCInDocker () {
+                                echo Start Robot Framework automation in docker container
+                                docker exec ${DOCKER_CONTAINER} robot -t "Check Status Or Restart App" -v "ENV:${Environment}" -v "OPER:${Operation}" -v "APPS:${Application}" -v "AWS_PRIVATE_KEY:${SSHKey}" workspace/ECOManageRobotProject/TestSuite_ECO_${CUSTOMER}/TestSuite_ECOManage/ECOEnv.robot                   			
+                            }
+
+                            exeTC () {
+                                echo Start Robot Framework automation
+                                robot -t "Check Status Or Restart App" -v "ENV:${Environment}" -v "OPER:${Operation}" -v "APPS:${Application}" -v "AWS_PRIVATE_KEY:${SSHKey}" ../ECOManageRobotProject/TestSuite_ECO_${CUSTOMER}/TestSuite_ECOManage/ECOEnv.robot                    			
+
+                            }
+
+                            echo --------------------------------------------
+                            echo Check if the docker container ${DOCKER_CONTAINER} is running
+                            echo --------------------------------------------
+                            set +e
+                            container_status=$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )
+                            set -e
+                            if [ "${container_status}" = "running" ]
+                            then
+                                echo --------------------------------------------
+                                echo The docker container ${DOCKER_CONTAINER} is running
+                                echo Start Robot Framework automation in docker container	
+                                echo --------------------------------------------
+                                exeTCInDocker
+                            elif [ "${container_status}" = "exited" ]
+                            then
+                                echo --------------------------------------------
+                                echo The docker container ${DOCKER_CONTAINER} is stopped
+                                echo Start the stopped docker container ${DOCKER_CONTAINER}
+                                echo --------------------------------------------	
+                                docker start ${DOCKER_CONTAINER}	
+                                exeTCInDocker
+                            else
+                                echo --------------------------------------------
+                                echo The docker container ${DOCKER_CONTAINER} is not running
+                                echo Check if docker is installed
+                                echo --------------------------------------------
+                                if [ -z "$( docker version )" ]
+                                then
+                                    echo --------------------------------------------
+                                    echo Docker is not installed
+                                    echo Start Robot Framework automation without docker container
+                                    echo --------------------------------------------
+                                    exeTC	
+                                else
+                                    echo --------------------------------------------
+                                    echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE_FULL}
+                                    echo --------------------------------------------
+                                    docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE_FULL}	
+                                    exeTCInDocker
+                                fi
+                            fi
+                        '''
+                    }                    
                 }
             }
         }

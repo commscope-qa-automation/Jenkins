@@ -1,0 +1,239 @@
+def getLoginUser() {
+    def loginUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')['userId'][0]
+    return loginUser
+}
+
+def LOGIN_USER = getLoginUser()
+
+pipeline {
+    options {skipDefaultCheckout(true)}
+
+	agent {label "robot_" + LOGIN_USER}
+    
+    stages {
+        stage ("Update Robot Docker Image") {
+            steps {
+            	script {
+					/*
+					########################################################################
+					Build history: #<Build Number> <Login User> - <TestSuiteName>
+					########################################################################
+					*/ 
+	                currentBuild.displayName = "#" + currentBuild.number + " " + LOGIN_USER
+
+					env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
+										
+					//env.DOCKER_HOST_PORT = "docker-registry.qa.ps.arris.com:5000"
+					
+					env.DOCKER_REPO = "http://nexus.qa.ps.arris.com:9001/repository/qadocker/"
+					env.DOCKER_HOST_PORT = "nexus.qa.ps.arris.com:9001"					
+					env.DOCKER_IMAGE = "robot-docker"	
+					env.DOCKER_IMAGE_TAG = "1"	
+					env.DOCKER_IMAGE_FULL = env.DOCKER_HOST_PORT + "/" + env.DOCKER_IMAGE + ":" + env.DOCKER_IMAGE_TAG
+					env.DOCKER_IMAGE_TAG_NEW = "1"	
+					env.DOCKER_IMAGE_FULL_NEW = env.DOCKER_HOST_PORT + "/" + env.DOCKER_IMAGE + ":" + env.DOCKER_IMAGE_TAG_NEW					
+					env.DOCKER_CONTAINER = "robot-docker-container"	+ "-" + LOGIN_USER																												                            	            	
+										
+                    if (isUnix()) {
+                        env.AGENT_OS = "linux"
+                    } else {
+                        env.AGENT_OS = "windows"
+                    }
+                    
+                    env.JENKINS_HOST = env.JENKINS_URL.split('/')[2]
+
+					/*
+					########################################################################
+					Start update docker image
+					########################################################################
+					*/  	                
+
+					if (AGENT_OS == "windows") {
+				        bat '''
+						SETLOCAL ENABLEDELAYEDEXPANSION
+
+						echo --------------------------------------------
+						echo Check if docker app is installed
+						echo --------------------------------------------
+						for /f %%j in ('docker version ^| findstr Server') do set docker_installed=%%j
+
+						if "!docker_installed!" == "" (
+							echo --------------------------------------------
+							echo Docker is not installed
+							echo Please installed Docker app first
+							echo --------------------------------------------
+							exit 1
+						)
+
+						echo --------------------------------------------
+						echo Check if the docker image %DOCKER_IMAGE_FULL% exists
+						echo --------------------------------------------
+						set "image_id="
+						for /f %%i in ('docker images %DOCKER_IMAGE_FULL% -q') do set image_id=%%i
+                        if "!image_id!" == "" (
+							echo --------------------------------------------
+							echo The docker image %DOCKER_IMAGE_FULL% does not exist
+							echo --------------------------------------------  
+							goto getDockerImage
+                        ) else (
+							echo --------------------------------------------
+							echo The docker image %DOCKER_IMAGE_FULL% exists
+							echo --------------------------------------------
+							if "%DOCKER_IMAGE_FULL%" == "%DOCKER_IMAGE_FULL_NEW%" (
+    							echo --------------------------------------------
+        						echo Nothing to be done
+        						echo --------------------------------------------
+        						goto eof
+							) else (
+    							echo --------------------------------------------
+        						echo Check if the docker container %DOCKER_CONTAINER% exists
+        						echo --------------------------------------------
+        						set "containter_id="
+        						for /f %%i in ('docker container ls -f "name=%DOCKER_CONTAINER%" -q') do set containter_id=%%i
+                                if "!containter_id!" == "" (
+        							echo --------------------------------------------
+        							echo The docker container %DOCKER_CONTAINER% does not exist
+        							echo --------------------------------------------                            
+                                ) else (
+        							echo --------------------------------------------
+        							echo The docker container %DOCKER_CONTAINER% exists
+        							echo Remvove docker container %DOCKER_CONTAINER%
+        							echo --------------------------------------------
+        							docker rm -f !containter_id!
+                                )
+    							echo --------------------------------------------							
+    							echo Remove docker image %DOCKER_IMAGE_FULL%
+    							echo --------------------------------------------							
+    							docker rmi -f !image_id!
+    							goto getDockerImage
+							)
+                        )
+                        
+                        :getDockerImage
+						Rem echo --------------------------------------------
+						Rem Rem Rem Rem Rem Rem echo Get docker image %DOCKER_IMAGE_FULL_NEW% from Jenkins
+						Rem Rem Rem Rem Rem echo --------------------------------------------               
+						Rem Rem Rem Rem curl -u user:2wire131 --output "%LOCAL_WORKSPACE%robot-docker-image_%DOCKER_IMAGE_TAG_NEW%.tar.gz"  http://%JENKINS_HOST%/userContent/dockerImage/robot-docker-image_%DOCKER_IMAGE_TAG_NEW%.tar.gz
+                        Rem Rem Rem docker load --input %LOCAL_WORKSPACE%robot-docker-image_%DOCKER_IMAGE_TAG_NEW%.tar.gz
+                        Rem Rem docker tag robot-docker:%DOCKER_IMAGE_TAG_NEW% %DOCKER_IMAGE_FULL_NEW%
+                        Rem del %LOCAL_WORKSPACE%robot-docker-image_%DOCKER_IMAGE_TAG_NEW%.tar.gz
+                        
+                        echo --------------------------------------------
+                        echo Get docker image %DOCKER_IMAGE_FULL_NEW% from repository
+                        echo -------------------------------------------- 
+                        docker login -uadmin -p2wire131 ${DOCKER_REPO}
+                        docker pull ${DOCKER_IMAGE_FULL_NEW}
+                        
+                        set "image_new_id="
+						for /f %%i in ('docker images %DOCKER_IMAGE_FULL_NEW% -q') do set image_new_id=%%i
+                        if "image_new_id!" == "" (
+							echo --------------------------------------------
+							echo ERROR: getting docker image %DOCKER_IMAGE_FULL_NEW% from repository
+							echo --------------------------------------------  
+                            goto :error
+							
+                        )
+                        goto :eof
+
+						:error
+                        exit /b %errorlevel%
+                            
+                        :eof
+                        '''
+					}
+                	else {							
+                		sh '''
+                		getDockerImage() {
+                		    echo --------------------------------------------
+    						echo Get docker image ${DOCKER_IMAGE_FULL_NEW} from repository
+    						echo --------------------------------------------               
+    						docker login -uadmin -p2wire131 ${DOCKER_REPO}
+    						docker pull ${DOCKER_IMAGE_FULL_NEW}
+    						
+    						set +e
+    						image_new_id=$(docker images ${DOCKER_IMAGE_FULL_NEW} -q)
+    						set -e
+                            if [ -z "${image_new_id}" ] 
+                            then
+        						#echo --------------------------------------------
+        						#echo ERROR: getting docker image ${DOCKER_IMAGE_FULL_NEW} from repository
+        						#echo Get docker image ${DOCKER_IMAGE_FULL_NEW} via curl from Jenkins
+        						#echo --------------------------------------------                         
+        						#curl -u user:2wire131 --output "${LOCAL_WORKSPACE}robot-docker-image_${DOCKER_IMAGE_TAG_NEW}.tar.gz"  #http://${JENKINS_HOST}/userContent/dockerImage/robot-docker-image_${DOCKER_IMAGE_TAG_NEW}.tar.gz
+                                #docker load --input ${LOCAL_WORKSPACE}robot-docker-image_${DOCKER_IMAGE_TAG_NEW}.tar.gz
+                                #docker tag robot-docker:${DOCKER_IMAGE_TAG_NEW} ${DOCKER_IMAGE_FULL_NEW}
+                                #rm -f ${LOCAL_WORKSPACE}robot-docker-image_${DOCKER_IMAGE_TAG_NEW}.tar.gz	
+                                
+                                echo --------------------------------------------
+                                echo ERROR: getting docker image ${DOCKER_IMAGE_FULL_NEW} from repository
+                                echo --------------------------------------------
+                                exit 1 # terminate and indicate error
+                            fi
+                		}
+                		
+                		
+						echo --------------------------------------------
+						echo Check if docker app is installed
+						echo --------------------------------------------                  										
+                		if [ -z "$( docker version )" ]
+                		then
+							echo --------------------------------------------
+							echo Docker is not installed
+							echo Please installed Docker app first
+							echo --------------------------------------------
+							exit 1
+						fi               		
+
+						echo --------------------------------------------
+						echo Check if the docker image ${DOCKER_IMAGE_FULL} exists
+						echo --------------------------------------------
+						set +e
+						image_id=$(docker images ${DOCKER_IMAGE_FULL} -q)
+						set -e
+                        if [ -z "${image_id}" ]
+                        then
+							echo --------------------------------------------
+							echo The docker image ${DOCKER_IMAGE_FULL} does not exist
+							echo --------------------------------------------    
+							getDockerImage
+                        else
+							echo --------------------------------------------
+							echo The docker image ${DOCKER_IMAGE_FULL} exists
+							echo --------------------------------------------
+							if [ "${DOCKER_IMAGE_FULL}" = "${DOCKER_IMAGE_FULL_NEW}" ]
+						    then
+    							echo --------------------------------------------
+        						echo Nothing to be done
+        						echo --------------------------------------------						        
+						    else
+    							echo --------------------------------------------
+        						echo Check if the docker container %DOCKER_CONTAINER% exists
+        						echo --------------------------------------------
+        						container_id = $( docker container ls -f name=%DOCKER_CONTAINER% -q )
+        						if [ -z "${container_id}" ]
+        						then
+        						    echo --------------------------------------------
+        							echo The docker container ${DOCKER_CONTAINER} does not exist
+        							echo --------------------------------------------   
+                                else
+        							echo --------------------------------------------
+        							echo The docker container ${DOCKER_CONTAINER} exists
+        							echo Remvove docker container ${DOCKER_CONTAINER}
+        							echo --------------------------------------------
+        							docker rm -f ${containter_id}
+                                fi
+                                
+    							echo --------------------------------------------							
+    							echo Remove docker image ${DOCKER_IMAGE_FULL}
+    							echo --------------------------------------------							
+    							docker rmi -f ${image_id}
+    							getDockerImage
+    						fi
+                        fi
+                		'''
+                	}
+            	}
+            }
+        }
+	}       
+}   

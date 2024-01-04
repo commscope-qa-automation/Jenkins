@@ -74,21 +74,10 @@ def getLoginUser() {
 
 def LOGIN_USER = getLoginUser()
 
-def getlabel(os) {
-	if (!os) {
-		os = "windows"
-	} 
-	label = "robot_" + os
-	if ( os.contains("windows") ) {
-		label = label + "_" + getLoginUser()
-	}
-	return label
-}
-
 pipeline {
     options {skipDefaultCheckout(true)}
 
-    agent {label getlabel(params.OS)}
+	agent {label "robot_" + LOGIN_USER}
     
     stages {
         stage('Parameters'){
@@ -121,7 +110,8 @@ pipeline {
                         	"RGFMECO69NBIUpgrade",	
                         	"RGFMECO134Docker",
                         	"FirmwareUpgrade",
-                        	"RG5268AC"
+                        	"RG5268AC",
+				"ECOControlCR1737EventNotification"
                         	]
                         '''
 
@@ -522,6 +512,31 @@ pipeline {
                             		"ECOIOT-4739",
                             		"ECOIOT-4740"							
                             	]	
+                            } else if (TestSuiteName == "ECOControlCR1737EventNotification") {
+                            	return [
+                            		"",
+                            		"ECOIOT-6373",
+                            		"ECOIOT-6374",
+                            		"ECOIOT-6375",
+                            		"ECOIOT-6379",
+                            		"ECOIOT-6380",
+									"ECOIOT-6424",	
+									"ECOIOT-6425",
+									"ECOIOT-6426",	
+									"ECOIOT-6428",
+									"ECOIOT-6597",
+									"ECOIOT-6598",
+									"ECOIOT-6599",
+									"ECOIOT-6600",
+									"ECOIOT-6601",
+									"ECOIOT-6602",
+									"ECOIOT-6604",
+									"ECOIOT-6605",	
+									"ECOIOT-6606",	
+									"ECOIOT-6607",
+									"ECOIOT-6608",	
+									"ECOIOT-6609"						
+                            	]	
                             } else {
                             	return ["Unknown testsuite"]
                             }
@@ -610,58 +625,58 @@ pipeline {
                             	return [
                             		"",
                             		"ECOIOT-4644",
-									"ECOIOT-4646",
-									"ECOIOT-4647",
-									"ECOIOT-4650",
-									"ECOIOT-4651",
-									"ECOIOT-4652",
-									"ECOIOT-4653",
-									"ECOIOT-4658",
-									"ECOIOT-4658b",
-									"ECOIOT-4659",
-									"ECOIOT-4662",
-									"ECOIOT-4663",
-									"ECOIOT-4665",
-									"ECOIOT-4955",
-									"ECOIOT-4957",
-									"ECOIOT-4958",
-									"ECOIOT-4959",
-									"ECOIOT-4960",
-									"ECOIOT-4961",
-									"ECOIOT-4962",
-									"ECOIOT-4964",
-									"ECOIOT-5144",
-									"ECOIOT-5144b",
-									"ECOIOT-5146",
-									"ECOIOT-5149",
-									"ECOIOT-5149b",
-									"ECOIOT-5301",
-									"ECOIOT-5302",
-									"ECOIOT-5303",
-									"ECOIOT-5304",
-									"ECOIOT-5308",
-									"ECOIOT-5309",
-									"ECOIOT-5310",
-									"ECOIOT-5311",
-									"ECOIOT-5312",
-									"ECOIOT-5313",
-									"ECOIOT-5314",
-									"ECOIOT-5315",
-									"ECOIOT-5316",
-									"ECOIOT-5317",
-									"ECOIOT-5318",
-									"ECOIOT-5318b",
-									"ECOIOT-5319",
-									"ECOIOT-5319b",
-									"ECOIOT-5326",
-									"ECOIOT-5327",
-									"ECOIOT-5328",
-									"ECOIOT-5329",
-									"ECOIOT-5330",
-									"ECOIOT-5337",
-									"ECOIOT-5340"
+					"ECOIOT-4646",
+					"ECOIOT-4647",
+					"ECOIOT-4650",
+					"ECOIOT-4651",
+					"ECOIOT-4652",
+					"ECOIOT-4653",
+					"ECOIOT-4658",
+					"ECOIOT-4658b",
+					"ECOIOT-4659",
+					"ECOIOT-4662",
+					"ECOIOT-4663",
+					"ECOIOT-4665",
+					"ECOIOT-4955",
+					"ECOIOT-4957",
+					"ECOIOT-4958",
+					"ECOIOT-4959",
+					"ECOIOT-4960",
+					"ECOIOT-4961",
+					"ECOIOT-4962",
+					"ECOIOT-4964",
+					"ECOIOT-5144",
+					"ECOIOT-5144b",
+					"ECOIOT-5146",
+					"ECOIOT-5149",
+					"ECOIOT-5149b",
+					"ECOIOT-5301",
+					"ECOIOT-5302",
+					"ECOIOT-5303",
+					"ECOIOT-5304",
+					"ECOIOT-5308",
+					"ECOIOT-5309",
+					"ECOIOT-5310",
+					"ECOIOT-5311",
+					"ECOIOT-5312",
+					"ECOIOT-5313",
+					"ECOIOT-5314",
+					"ECOIOT-5315",
+					"ECOIOT-5316",
+					"ECOIOT-5317",
+					"ECOIOT-5318",
+					"ECOIOT-5318b",
+					"ECOIOT-5319",
+					"ECOIOT-5319b",
+					"ECOIOT-5326",
+					"ECOIOT-5327",
+					"ECOIOT-5328",
+					"ECOIOT-5329",
+					"ECOIOT-5330",
+					"ECOIOT-5337",
+					"ECOIOT-5340"
                             	]
-                            }
+                            } 
                             else if (TestSuiteName == "test2") {
                             	return [
                             		"",
@@ -671,8 +686,94 @@ pipeline {
                             	return ["Unknown testsuite"]
                             }  
                         '''
-                    }
-
+			} else if (env.JOB_NAME.contains('Telstra')) {
+                        choiceTestSuite = '''
+                            return [
+                        	"",
+                        	"SoftwareModules",
+				"TelstraRegression"
+                        	]
+                        ''' 
+                        choiceTestCase = '''
+                            if (TestSuiteName == "SoftwareModules") {
+                            	return [
+                            		"",
+                            		"ECOIOT-6523",
+                            		"ECOIOT-6554",
+                            		"ECOIOT-6511",
+                            		"ECOIOT-6518",
+                            		"ECOIOT-6337",
+                            		"ECOIOT-6512",
+                            		"ECOIOT-6516",
+                            		"ECOIOT-6522",
+                            		"ECOIOT-6514",
+                            		"ECOIOT-6513",
+                            		"ECOIOT-6515"
+                            	]
+                            } else if (TestSuiteName == "TelstraRegression") {
+                            	return [
+                            		"",
+                            		"ECOIOT-5535",
+                            		"ECOIOT-5533",
+                            		"ECOIOT-5538",
+                            		"ECOIOT-6592",
+                            		"ECOIOT-5537",
+                            		"ECOIOT-3493",
+                                        "ECOIOT-5810",
+                             		"ECOIOT-5811",
+                            		"ECOIOT-5813",
+                            		"ECOIOT-5814",
+                            		"ECOIOT-5815",
+                            		"ECOIOT-5816"
+                            	]
+                            } else {
+                            	return ["Unknown testsuite"]
+                            } 		
+						''' 
+			} else if (env.JOB_NAME.contains('Frontier')) {
+                        choiceTestSuite = '''
+                            return [
+                        	"",
+                        	"ECO_Sagemcom"
+                        	]
+                        ''' 
+                        choiceTestCase = '''
+                            if (TestSuiteName == "ECO_Sagemcom") {
+                            	return [
+                            		"",
+                            		"ECOIOT-6316",
+					"ECOIOT-6371",
+                            		"ECOIOT-6458",
+                            		"ECOIOT-6459",
+					"ECOIOT-6562",
+					"ECOIOT-6563",
+                            		"ECOIOT-6313a",
+                            		"ECOIOT-6313b",
+                            		"ECOIOT-6313c",
+                            		"ECOIOT-6503",
+                            		"ECOIOT-6504",
+                            		"ECOIOT-6506",
+                            		"ECOIOT-6505",
+					"ECOIOT-6288",
+                            		"ECOIOT-6291",
+                            		"ECOIOT-6292",
+					"ECOIOT-6293",
+                            		"ECOIOT-6320",
+                            		"ECOIOT-6341",
+                            		"ECOIOT-6315",
+					"ECOIOT-6332",                            		
+                            		"ECOIOT-6331",
+                            		"ECOIOT-6337",					                
+                            		"ECOIOT-6298",
+					"ECOIOT-6323",
+					"ECOIOT-6327",
+					"ECOIOT-6339"
+                            	]                           
+                            } else {
+                            	return ["Unknown testsuite"]
+                            } 		
+						''' 
+					}
 					/*
 					########################################################################
 					Define string of different functions for Choice Parameter script content 
@@ -717,7 +818,7 @@ pipeline {
 								}
 							}   
 							
-							def jiraBaseURL = "https://etrack.arrisi.com"
+							def jiraBaseURL = "https://odart.arrisi.com"
 							def project = "ECOIOT"
 						
 							def projectId = ""
@@ -764,7 +865,7 @@ pipeline {
 						def jsonSlurper = new JsonSlurper()
 						def data = jsonSlurper.parse(new File(filename))
 						
-						def jiraBaseURL = "https://etrack.arrisi.com"
+						def jiraBaseURL = "https://odart.arrisi.com"
 						def projectId =  data["projectId"]
 						def versionId = data["versionNameId"][ProjectVersion]
 						def cycleNameId = [:]
@@ -824,7 +925,7 @@ pipeline {
 						def jsonSlurper = new JsonSlurper()
 						def data = jsonSlurper.parse(new File(filename))
 						
-						def jiraBaseURL = "https://etrack.arrisi.com"
+						def jiraBaseURL = "https://odart.arrisi.com"
 						def projectId =  data["projectId"]
 						def versionId = data["versionId"]
 						def cycleId = data["cycleNameId"][ProjectCycle]
@@ -864,11 +965,7 @@ pipeline {
 					########################################################################
 					*/                    
                     properties([
-                        parameters([
-                            choice(
-                                choices: ['windows', 'linux_1', 'linux_2', 'linux_3', 'linux_4', 'linux_5', 'linux_6', 'linux_7', 'linux_8', 'linux_9', 'linux_10'], 
-                                name: 'OS'
-                            ),
+                        parameters([                            
                             [
                                 $class: 'ParameterSeparatorDefinition',
                                 name: 'DIR_HEADER',
@@ -1085,7 +1182,9 @@ pipeline {
 	                    env.CUSTOMER = "_ATT"
 	                } else if (env.JOB_NAME.contains('Ziply')) {
 	                    env.CUSTOMER = "_Ziply"
-	                } else if (env.JOB_NAME.contains('Sasktel')) {
+	                } else if (env.JOB_NAME.contains('Frontier')) {
+	                    env.CUSTOMER = "_Frontier"
+					} else if (env.JOB_NAME.contains('Sasktel')) {
 	                    env.CUSTOMER = "_Sasktel"
 	                } else if (env.JOB_NAME.contains('Telstra')) {
 	                    env.CUSTOMER = "_Telstra"
@@ -1102,26 +1201,26 @@ pipeline {
 					}
 
 					env.LOCAL_WORKSPACE = env.WORKSPACE.split("workspace")[0]
+					env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir					
 										
 					env.DOCKER_REGISTRY = "docker-registry.qa.ps.arris.com:5000"
-					env.DOCKER_IMAGE = env.DOCKER_REGISTRY + "/robot-docker"	
+					env.DOCKER_IMAGE = "robot-docker"	
 					env.DOCKER_IMAGE_TAG = "1"	
-					env.DOCKER_CONTAINER = "robot-docker-container"																													                            	            	
-					env.RESULT_DIR="workspace/" + env.JOB_NAME + "/" + params.OutputDir
-
-
-					if (isUnix()) {
-						env.AGENT_OS = "linux"
-					} else {
-						env.AGENT_OS = "windows"
-					}
-
+					env.DOCKER_IMAGE_FULL = env.DOCKER_REGISTRY + "/" + env.DOCKER_IMAGE + ":" + env.DOCKER_IMAGE_TAG
+					env.DOCKER_CONTAINER = "robot-docker-container"	+ "-" + LOGIN_USER																												                            	            	
+										
+                    if (isUnix()) {
+                        env.AGENT_OS = "linux"
+                    } else {
+                        env.AGENT_OS = "windows"
+                    }
+                
 					/*
 					########################################################################
 					For first use, copy TestData_Custom to the <WORKSPACE>
 					########################################################################
 					*/                     
-                    if (env.AGENT_OS == "windows") {
+                    if (AGENT_OS == "windows") {
 						bat '''
 							if exist "%LOCAL_WORKSPACE%TestData_Custom" ( 
 								echo TestData directory %LOCAL_WORKSPACE%TestData_Custom exists 								
@@ -1154,7 +1253,7 @@ pipeline {
 							env.TestCaseRunFilter = params.TestCaseRunFilter1.split(",").collect { "-t " + it }.join(" ")
 						}
 
-						if (env.AGENT_OS == "windows") {
+						if (AGENT_OS == "windows") {
 					        bat '''
 							SETLOCAL ENABLEDELAYEDEXPANSION
 
@@ -1174,25 +1273,33 @@ pipeline {
 								echo --------------------------------------------							
 								goto exeTCInDocker
 							) else (
-								echo --------------------------------------------
-								echo The docker container %DOCKER_CONTAINER% is not running
-								echo Check if docker is installed
-								echo --------------------------------------------
-								set "docker_installed="
-								for /f %%j in ('docker version ^| findstr Server') do set docker_installed=%%j
-	
-								if "!docker_installed!" == "" (
+								if "!containter_status!" == "'exited'" (
 									echo --------------------------------------------
-									echo Docker is not installed
-									echo Start Robot Framework automation without docker container
-									echo --------------------------------------------
-									goto exeTC	
+									echo The docker container %DOCKER_CONTAINER% is stopped
+									echo Start the stopped docker container %DOCKER_CONTAINER%
+									echo --------------------------------------------	
+									docker start %DOCKER_CONTAINER%								
 								) else (
 									echo --------------------------------------------
-									echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%
+									echo The docker container %DOCKER_CONTAINER% is not running
+									echo Check if docker is installed
 									echo --------------------------------------------
-									docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%	
-									goto exeTCInDocker
+									set "docker_installed="
+									for /f %%j in ('docker version ^| findstr Server') do set docker_installed=%%j
+		
+									if "!docker_installed!" == "" (
+										echo --------------------------------------------
+										echo Docker is not installed
+										echo Start Robot Framework automation without docker container
+										echo --------------------------------------------
+										goto exeTC	
+									) else (
+										echo --------------------------------------------
+										echo Start running docker container %DOCKER_CONTAINER% from image %DOCKER_IMAGE_FULL%
+										echo --------------------------------------------
+										docker run --name %DOCKER_CONTAINER% -v %LOCAL_WORKSPACE%:/usr/src -d -t %DOCKER_IMAGE_FULL%	
+										goto exeTCInDocker
+									)
 								)
 							)
 
@@ -1217,9 +1324,7 @@ pipeline {
 							:eof
 	                        '''
 						}
-                    	else {
-							env.DOCKER_CONTAINER_NUM = params.OS.split("_")[1]
-							env.DOCKER_CONTAINER = env.DOCKER_CONTAINER + env.DOCKER_CONTAINER_NUM
+                    	else {							
                     		sh '''
 							exeTCInDocker () {
 								echo Start Robot Framework automation in docker container
@@ -1249,12 +1354,23 @@ pipeline {
 							echo --------------------------------------------
 							echo Check if the docker container ${DOCKER_CONTAINER} is running
 							echo --------------------------------------------
-							if [ "$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )" = "running" ]
+							set +e
+							container_status=$( docker container inspect -f '{{.State.Status}}' ${DOCKER_CONTAINER} )
+							set -e
+							if [ "${container_status}" = "running" ]
 							then
 								echo --------------------------------------------
 								echo The docker container ${DOCKER_CONTAINER} is running
 								echo Start Robot Framework automation in docker container	
 								echo --------------------------------------------
+								exeTCInDocker
+							elif [ "${container_status}" = "exited" ]
+							then
+								echo --------------------------------------------
+								echo The docker container ${DOCKER_CONTAINER} is stopped
+								echo Start the stopped docker container ${DOCKER_CONTAINER}
+								echo --------------------------------------------	
+								docker start ${DOCKER_CONTAINER}	
 								exeTCInDocker
 							else
 								echo --------------------------------------------
@@ -1270,9 +1386,9 @@ pipeline {
 									exeTC	
 								else
 									echo --------------------------------------------
-									echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}
+									echo Start running docker container ${DOCKER_CONTAINER} from image ${DOCKER_IMAGE_FULL}
 									echo --------------------------------------------
-									docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src -d -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}	
+									docker run --name ${DOCKER_CONTAINER} -v ${LOCAL_WORKSPACE}:/usr/src:z -d -t ${DOCKER_IMAGE_FULL}	
 									exeTCInDocker
 								fi
 							fi
@@ -1363,7 +1479,7 @@ pipeline {
 						
 						// Update JIRA test case status
 						println("Start updating Etrack test case status.")
-						def jiraBaseURL = "https://etrack.arrisi.com"
+						def jiraBaseURL = "https://odart.arrisi.com"
 						def project = "ECOIOT"
 						
 						// Read the junit file generated from Robot Framework
